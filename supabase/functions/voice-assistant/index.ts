@@ -523,14 +523,14 @@ serve(async (req) => {
         { role: 'user', content: text }
       ];
 
-      const chatResponse = await fetch('https://api.greenpt.io/v1/chat/completions', {
+      const chatResponse = await fetch('https://api.greenpt.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${GREENPT_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'green-l-raw',
           messages: chatMessages,
           max_tokens: 800,
           temperature: 0.7,
