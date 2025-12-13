@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,7 @@ export const useVoiceAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -19,6 +20,17 @@ export const useVoiceAssistant = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Get current user ID for saving data
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const startListening = useCallback(async () => {
     try {
@@ -107,13 +119,14 @@ export const useVoiceAssistant = () => {
       const userMessage: Message = { role: 'user', content: userText };
       setMessages(prev => [...prev, userMessage]);
       
-      // Step 2: Get AI response
+      // Step 2: Get AI response (with tool calling)
       console.log('Getting AI response...');
       const { data: chatData, error: chatError } = await supabase.functions.invoke('voice-assistant', {
         body: { 
           action: 'chat', 
           text: userText,
-          messages: messages.slice(-6) // Reduced context for faster response
+          messages: messages.slice(-6),
+          userId: userId // Pass userId for saving data
         }
       });
       
@@ -121,6 +134,15 @@ export const useVoiceAssistant = () => {
       
       const assistantText = chatData?.text || 'Sorry, ik begreep dat niet.';
       const navigateTo = chatData?.navigate;
+      const toolResults = chatData?.toolResults;
+      
+      // Show toast if actions were executed
+      if (toolResults && toolResults.length > 0) {
+        toast({
+          title: 'Actie uitgevoerd',
+          description: 'Gegevens zijn opgeslagen in je tijdlijn.',
+        });
+      }
       
       // Add assistant message immediately - don't wait for speech
       const assistantMessage: Message = { role: 'assistant', content: assistantText };
