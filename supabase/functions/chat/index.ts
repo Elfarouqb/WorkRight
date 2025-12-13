@@ -72,14 +72,14 @@ serve(async (req) => {
 
     console.log('Processing chat request with', messages.length, 'messages');
 
-    const response = await fetch('https://api.greenpt.io/v1/chat/completions', {
+    const response = await fetch('https://api.greenpt.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${GREENPT_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'green-l-raw',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages,
