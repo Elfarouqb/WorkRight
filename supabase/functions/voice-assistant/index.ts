@@ -153,7 +153,7 @@ serve(async (req) => {
 
       console.log('Converting to speech:', text);
 
-      // Use a Dutch-friendly voice
+      // Use a Dutch-friendly voice with flash model for speed
       const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - natural female voice
 
       const ttsResponse = await fetch(
@@ -166,12 +166,10 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_multilingual_v2',
+            model_id: 'eleven_flash_v2_5', // Faster model for quicker response
             voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.3,
-              use_speaker_boost: true,
+              stability: 0.4,
+              similarity_boost: 0.8,
             },
           }),
         }
