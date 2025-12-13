@@ -17,6 +17,7 @@ export const useVoiceAssistant = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -198,14 +199,17 @@ export const useVoiceAssistant = () => {
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio;
       
       await new Promise<void>((resolve, reject) => {
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
+          currentAudioRef.current = null;
           resolve();
         };
         audio.onerror = () => {
           URL.revokeObjectURL(audioUrl);
+          currentAudioRef.current = null;
           reject(new Error('Audio playback failed'));
         };
         audio.play().catch(reject);
@@ -217,6 +221,15 @@ export const useVoiceAssistant = () => {
       setIsSpeaking(false);
     }
   };
+
+  const stopSpeaking = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+      setIsSpeaking(false);
+    }
+  }, []);
 
   const base64ToBlob = (base64: string, mimeType: string): Blob => {
     const binaryString = atob(base64);
@@ -242,6 +255,7 @@ export const useVoiceAssistant = () => {
     error,
     startListening,
     stopListening,
+    stopSpeaking,
     clearMessages,
   };
 };

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, Loader2, Send, Trash2, Heart, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, Send, Trash2, Heart, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -26,6 +26,7 @@ const Hulp = () => {
     error: voiceError,
     startListening,
     stopListening,
+    stopSpeaking,
     clearMessages: clearVoiceMessages,
   } = useVoiceAssistant();
 
@@ -133,13 +134,39 @@ const Hulp = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={cn(
-                        "p-3 rounded-xl text-sm",
+                        "p-4 rounded-xl",
                         msg.role === 'user'
                           ? "bg-primary text-primary-foreground ml-8"
-                          : "bg-muted text-foreground mr-8"
+                          : "bg-muted text-foreground mr-4 border border-border/50"
                       )}
                     >
-                      {msg.content}
+                      {msg.role === 'assistant' ? (
+                        <div className="space-y-2">
+                          {msg.content.split('\n').map((line, i) => {
+                            if (line.startsWith('•')) {
+                              return (
+                                <p key={i} className="text-sm pl-2 border-l-2 border-primary/30">
+                                  {line.substring(1).trim()}
+                                </p>
+                              );
+                            }
+                            if (line.includes(':') && !line.startsWith('http')) {
+                              const [label, ...rest] = line.split(':');
+                              return (
+                                <p key={i} className="text-sm">
+                                  <span className="font-semibold text-primary">{label}:</span>
+                                  {rest.join(':')}
+                                </p>
+                              );
+                            }
+                            return line.trim() ? (
+                              <p key={i} className="text-sm">{line}</p>
+                            ) : null;
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm">{msg.content}</p>
+                      )}
                     </motion.div>
                   ))
                 )}
@@ -167,15 +194,26 @@ const Hulp = () => {
                   </motion.div>
                 )}
 
-                {/* Speaking indicator */}
+                {/* Speaking indicator with stop button */}
                 {isSpeaking && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex items-center gap-2 p-3 text-sm text-muted-foreground"
+                    className="flex items-center justify-between p-3 text-sm text-muted-foreground bg-accent/10 rounded-lg"
                   >
-                    <Volume2 className="h-4 w-4 animate-pulse" />
-                    <span>Aan het spreken...</span>
+                    <div className="flex items-center gap-2">
+                      <Volume2 className="h-4 w-4 animate-pulse text-primary" />
+                      <span>Aan het spreken...</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={stopSpeaking}
+                      className="h-7 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <VolumeX className="h-3 w-3 mr-1" />
+                      Stop
+                    </Button>
                   </motion.div>
                 )}
 
