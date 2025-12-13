@@ -145,19 +145,19 @@ serve(async (req) => {
       });
     }
 
-    // Text-to-Speech with ElevenLabs
+    // Text-to-Speech with ElevenLabs - Streaming for faster playback
     if (action === 'speak') {
       if (!text) {
         throw new Error('No text provided');
       }
 
-      console.log('Converting to speech:', text);
+      console.log('Converting to speech (streaming):', text);
 
       // Use a Dutch-friendly voice with flash model for speed
       const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - natural female voice
 
       const ttsResponse = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
         {
           method: 'POST',
           headers: {
@@ -166,7 +166,8 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_flash_v2_5', // Faster model for quicker response
+            model_id: 'eleven_flash_v2_5', // Fastest model
+            output_format: 'mp3_22050_32', // Smaller, faster format
             voice_settings: {
               stability: 0.4,
               similarity_boost: 0.8,
@@ -181,20 +182,13 @@ serve(async (req) => {
         throw new Error(`ElevenLabs TTS error: ${ttsResponse.status}`);
       }
 
-      const audioBuffer = await ttsResponse.arrayBuffer();
-      
-      // Convert to base64
-      const uint8Array = new Uint8Array(audioBuffer);
-      let binary = '';
-      const chunkSize = 0x8000;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-        binary += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      const base64Audio = btoa(binary);
-
-      return new Response(JSON.stringify({ audio: base64Audio }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Stream the audio directly back to client
+      return new Response(ttsResponse.body, {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'audio/mpeg',
+          'Transfer-Encoding': 'chunked',
+        },
       });
     }
 

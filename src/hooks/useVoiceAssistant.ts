@@ -157,15 +157,25 @@ export const useVoiceAssistant = () => {
     setIsSpeaking(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('voice-assistant', {
-        body: { action: 'speak', text }
-      });
+      // Use streaming fetch directly for faster audio playback
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-assistant`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: 'speak', text }),
+        }
+      );
       
-      if (error) throw new Error(error.message);
-      if (!data?.audio) throw new Error('Geen audio ontvangen');
+      if (!response.ok) {
+        throw new Error('TTS request failed');
+      }
       
-      // Play audio
-      const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
+      // Get audio blob directly from streaming response
+      const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       
