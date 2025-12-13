@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const GREENPT_API_KEY = Deno.env.get('GREENPT_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -509,13 +509,13 @@ serve(async (req) => {
       });
     }
 
-    // Chat with Lovable AI (with tool calling)
+    // Chat with GreenPT (with tool calling)
     if (action === 'chat') {
       if (!text) {
         throw new Error('No text provided');
       }
 
-      console.log('Sending to Lovable AI with tools:', text);
+      console.log('Sending to GreenPT with tools:', text);
 
       const chatMessages = [
         { role: 'system', content: systemPrompt },
@@ -523,14 +523,14 @@ serve(async (req) => {
         { role: 'user', content: text }
       ];
 
-      const chatResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const chatResponse = await fetch('https://api.greenpt.io/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${GREENPT_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'gpt-4o-mini',
           messages: chatMessages,
           max_tokens: 800,
           temperature: 0.7,
@@ -541,13 +541,13 @@ serve(async (req) => {
 
       if (!chatResponse.ok) {
         const errorText = await chatResponse.text();
-        console.error('Lovable AI error:', errorText);
-        throw new Error(`Lovable AI error: ${chatResponse.status}`);
+        console.error('GreenPT error:', errorText);
+        throw new Error(`GreenPT error: ${chatResponse.status}`);
       }
 
       const chatResult = await chatResponse.json();
       const choice = chatResult.choices?.[0];
-      console.log('Lovable AI response:', JSON.stringify(choice, null, 2));
+      console.log('GreenPT response:', JSON.stringify(choice, null, 2));
 
       let navigate = null;
       let responseText = '';
