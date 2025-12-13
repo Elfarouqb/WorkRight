@@ -103,7 +103,7 @@ export const useVoiceAssistant = () => {
       setTranscript(userText);
       console.log('Transcribed:', userText);
       
-      // Add user message
+      // Add user message immediately for faster feedback
       const userMessage: Message = { role: 'user', content: userText };
       setMessages(prev => [...prev, userMessage]);
       
@@ -113,7 +113,7 @@ export const useVoiceAssistant = () => {
         body: { 
           action: 'chat', 
           text: userText,
-          messages: messages.slice(-10) // Send last 10 messages for context
+          messages: messages.slice(-6) // Reduced context for faster response
         }
       });
       
@@ -122,21 +122,22 @@ export const useVoiceAssistant = () => {
       const assistantText = chatData?.text || 'Sorry, ik begreep dat niet.';
       const navigateTo = chatData?.navigate;
       
-      // Add assistant message
+      // Add assistant message immediately - don't wait for speech
       const assistantMessage: Message = { role: 'assistant', content: assistantText };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Step 3: Speak response
-      console.log('Speaking response...');
-      await speakText(assistantText);
+      // Start speaking in parallel with navigation prep
+      const speakPromise = speakText(assistantText);
       
-      // Step 4: Navigate if needed
+      // Navigate while speaking if needed (with shorter delay)
       if (navigateTo) {
         console.log('Navigating to:', navigateTo);
         setTimeout(() => {
           navigate(navigateTo);
-        }, 500);
+        }, 300);
       }
+      
+      await speakPromise;
       
     } catch (err) {
       console.error('Error processing audio:', err);
