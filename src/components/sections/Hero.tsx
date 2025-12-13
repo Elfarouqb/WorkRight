@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Shield, Heart, Clock } from "lucide-react";
+import { ArrowRight, Shield, Heart, Clock, MessageCircle, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Hero() {
@@ -36,16 +36,29 @@ export function Hero() {
               Geen juridische taal, geen oordeel - gewoon duidelijke uitleg en praktische hulp.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            {/* Main CTA - Hulp Button */}
+            <div className="pt-4">
+              <Link to="/hulp">
+                <Button size="lg" className="gap-3 text-lg font-semibold px-8 py-6 h-auto">
+                  <MessageCircle className="w-6 h-6" />
+                  Vraag hulp
+                  <span className="text-primary-foreground/70 text-sm ml-2">
+                    (spraak of tekst)
+                  </span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* Secondary CTAs */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Link to="/rechtenverkenner">
-                <Button size="lg" className="w-full sm:w-auto gap-2 text-base font-semibold">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 text-base font-semibold">
                   Start de Rechtenverkenner
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
               <Link to="/procesgids">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-semibold">
+                <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base font-semibold">
                   Bekijk de Procesgids
                 </Button>
               </Link>
