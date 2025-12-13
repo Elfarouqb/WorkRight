@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, Loader2, Send, Trash2, Heart, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, Send, Trash2, Heart, MessageSquare, Phone, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
+import { useElevenLabsAgent } from '@/hooks/useElevenLabsAgent';
 import { useChat } from '@/hooks/useChat';
 import { cn } from '@/lib/utils';
 
@@ -16,18 +16,17 @@ const suggestedQuestions = [
 ];
 
 const Hulp = () => {
-  // Voice assistant state
+  // Voice assistant state (ElevenLabs Conversational AI)
   const {
-    isListening,
-    isProcessing,
+    isConnected,
+    isConnecting,
     isSpeaking,
     messages: voiceMessages,
-    transcript,
     error: voiceError,
-    startListening,
-    stopListening,
+    startConversation,
+    endConversation,
     clearMessages: clearVoiceMessages,
-  } = useVoiceAssistant();
+  } = useElevenLabsAgent();
 
   // Text chat state
   const [input, setInput] = useState('');
@@ -43,11 +42,11 @@ const Hulp = () => {
     scrollToBottom();
   }, [chatMessages]);
 
-  const handleToggleListening = () => {
-    if (isListening) {
-      stopListening();
+  const handleToggleConversation = () => {
+    if (isConnected) {
+      endConversation();
     } else {
-      startListening();
+      startConversation();
     }
   };
 
@@ -70,7 +69,7 @@ const Hulp = () => {
     }
   };
 
-  const isVoiceActive = isListening || isProcessing || isSpeaking;
+  const isVoiceActive = isConnected || isConnecting;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -144,26 +143,15 @@ const Hulp = () => {
                   ))
                 )}
 
-                {/* Current transcript */}
-                {isListening && transcript && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-3 rounded-xl text-sm bg-primary/20 text-foreground ml-8 italic"
-                  >
-                    {transcript}...
-                  </motion.div>
-                )}
-
-                {/* Processing indicator */}
-                {isProcessing && (
+                {/* Connecting indicator */}
+                {isConnecting && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="flex items-center gap-2 p-3 text-sm text-muted-foreground"
                   >
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Even denken...</span>
+                    <span>Verbinden...</span>
                   </motion.div>
                 )}
 
@@ -176,6 +164,18 @@ const Hulp = () => {
                   >
                     <Volume2 className="h-4 w-4 animate-pulse" />
                     <span>Aan het spreken...</span>
+                  </motion.div>
+                )}
+
+                {/* Connected - listening indicator */}
+                {isConnected && !isSpeaking && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 p-3 text-sm text-primary"
+                  >
+                    <Mic className="h-4 w-4 animate-pulse" />
+                    <span>Ik luister... praat gerust</span>
                   </motion.div>
                 )}
 
@@ -195,31 +195,33 @@ const Hulp = () => {
               <div className="p-6 border-t border-border bg-muted/30">
                 <div className="flex items-center justify-center">
                   <Button
-                    onClick={handleToggleListening}
-                    disabled={isProcessing || isSpeaking}
+                    onClick={handleToggleConversation}
+                    disabled={isConnecting}
                     size="lg"
                     className={cn(
                       "h-20 w-20 rounded-full transition-all duration-300",
-                      isListening 
+                      isConnected 
                         ? "bg-destructive hover:bg-destructive/90 animate-pulse" 
                         : "bg-primary hover:bg-primary/90"
                     )}
-                    aria-label={isListening ? "Stop met luisteren" : "Begin met luisteren"}
+                    aria-label={isConnected ? "Beëindig gesprek" : "Start gesprek"}
                   >
-                    {isProcessing ? (
+                    {isConnecting ? (
                       <Loader2 className="h-8 w-8 animate-spin" />
-                    ) : isListening ? (
-                      <MicOff className="h-8 w-8" />
+                    ) : isConnected ? (
+                      <PhoneOff className="h-8 w-8" />
                     ) : (
-                      <Mic className="h-8 w-8" />
+                      <Phone className="h-8 w-8" />
                     )}
                   </Button>
                 </div>
                 
                 <p className="text-center text-sm text-muted-foreground mt-4">
-                  {isListening 
-                    ? "Ik luister... Druk nogmaals om te stoppen" 
-                    : "Druk om te spreken"}
+                  {isConnecting 
+                    ? "Verbinden met spraakassistent..."
+                    : isConnected 
+                      ? "Gesprek actief - Klik om te beëindigen" 
+                      : "Klik om een gesprek te starten"}
                 </p>
               </div>
             </div>
