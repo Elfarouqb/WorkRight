@@ -10,17 +10,22 @@ import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 
-const authSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email("Voer een geldig e-mailadres in"),
   password: z.string().min(6, "Wachtwoord moet minimaal 6 tekens bevatten"),
+});
+
+const signupSchema = loginSchema.extend({
+  displayName: z.string().min(2, "Naam moet minimaal 2 tekens bevatten").max(50, "Naam mag maximaal 50 tekens bevatten"),
 });
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; displayName?: string }>({});
   
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -34,15 +39,20 @@ const Auth = () => {
 
   const validateForm = () => {
     try {
-      authSchema.parse({ email, password });
+      if (isLogin) {
+        loginSchema.parse({ email, password });
+      } else {
+        signupSchema.parse({ email, password, displayName });
+      }
       setErrors({});
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const fieldErrors: { email?: string; password?: string } = {};
+        const fieldErrors: { email?: string; password?: string; displayName?: string } = {};
         err.errors.forEach((e) => {
           if (e.path[0] === "email") fieldErrors.email = e.message;
           if (e.path[0] === "password") fieldErrors.password = e.message;
+          if (e.path[0] === "displayName") fieldErrors.displayName = e.message;
         });
         setErrors(fieldErrors);
       }
@@ -81,7 +91,7 @@ const Auth = () => {
           });
         }
       } else {
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, displayName);
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
@@ -139,6 +149,23 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Voornaam</Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    placeholder="Je voornaam"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    disabled={isLoading}
+                    aria-describedby={errors.displayName ? "displayName-error" : undefined}
+                  />
+                  {errors.displayName && (
+                    <p id="displayName-error" className="text-sm text-destructive">{errors.displayName}</p>
+                  )}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mailadres</Label>
                 <div className="relative">
