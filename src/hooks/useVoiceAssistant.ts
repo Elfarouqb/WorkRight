@@ -99,6 +99,11 @@ export const useVoiceAssistant = () => {
     setTranscript('');
     
     try {
+      // Get current user directly to avoid stale closure
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id ?? null;
+      console.log('Processing audio for user:', currentUserId);
+      
       // Convert blob to base64
       const arrayBuffer = await audioBlob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
@@ -128,13 +133,13 @@ export const useVoiceAssistant = () => {
       setMessages(prev => [...prev, userMessage]);
       
       // Step 2: Get AI response (with tool calling)
-      console.log('Getting AI response...');
+      console.log('Getting AI response with userId:', currentUserId);
       const { data: chatData, error: chatError } = await supabase.functions.invoke('voice-assistant', {
         body: { 
           action: 'chat', 
           text: userText,
           messages: messages.slice(-6),
-          userId: userId // Pass userId for saving data
+          userId: currentUserId // Use freshly fetched userId
         }
       });
       
