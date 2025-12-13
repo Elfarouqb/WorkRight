@@ -7,26 +7,29 @@ import {
   Glasses,
   Baby
 } from "lucide-react";
-
-const characteristics = [
-  { icon: Accessibility, label: "Handicap of ziekte" },
-  { icon: Users, label: "Afkomst of ras" },
-  { icon: Heart, label: "Geslacht of gender" },
-  { icon: Brain, label: "Leeftijd" },
-  { icon: Glasses, label: "Godsdienst of overtuiging" },
-  { icon: Baby, label: "Zwangerschap" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ProtectedCharacteristics() {
+  const { t } = useLanguage();
+
+  const characteristics = [
+    { icon: Accessibility, label: t("characteristics.disability") },
+    { icon: Users, label: t("characteristics.race") },
+    { icon: Heart, label: t("characteristics.gender") },
+    { icon: Brain, label: t("characteristics.age") },
+    { icon: Glasses, label: t("characteristics.religion") },
+    { icon: Baby, label: t("characteristics.pregnancy") },
+  ];
+
   return (
     <section className="py-16 md:py-24">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-display-sm font-heading font-bold text-foreground mb-4">
-            Beschermde kenmerken
+            {t("characteristics.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            In Nederland mag je niet gediscrimineerd worden op basis van deze kenmerken.
+            {t("characteristics.subtitle")}
           </p>
         </div>
 
@@ -40,7 +43,7 @@ export function ProtectedCharacteristics() {
             const Icon = char.icon;
             return (
               <motion.div
-                key={char.label}
+                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -59,7 +62,7 @@ export function ProtectedCharacteristics() {
         </motion.div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          En meer: seksuele gerichtheid, burgerlijke staat, nationaliteit, politieke gezindheid
+          {t("characteristics.more")}
         </p>
       </div>
     </section>

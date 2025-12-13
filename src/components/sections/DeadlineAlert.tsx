@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function DeadlineAlert() {
+  const { t } = useLanguage();
+
   return (
     <section id="deadlines" className="py-16 md:py-24 bg-accent/10">
       <div className="container">
@@ -18,18 +21,16 @@ export function DeadlineAlert() {
           </div>
 
           <h2 className="text-display-sm font-heading font-bold text-foreground mb-4">
-            Termijnen zijn belangrijk
+            {t("deadline.title")}
           </h2>
 
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            In Nederland heb je vaak beperkte tijd om actie te ondernemen. Bijvoorbeeld: 
-            bezwaar bij het UWV moet binnen <strong className="text-foreground">6 weken</strong>. 
-            Weet jij wanneer jouw termijnen aflopen?
+            {t("deadline.text")} <strong className="text-foreground">{t("deadline.weeks")}</strong>. {t("deadline.question")}
           </p>
 
           <Link to="/termijnen">
             <Button size="lg" className="gap-2 font-semibold">
-              Bereken mijn termijnen
+              {t("deadline.calculate")}
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
