@@ -95,6 +95,30 @@ NAVIGATIE (alleen als expliciet gevraagd):
 Houd antwoorden kort (max 3-4 zinnen voor spraak).
 Wees empathisch - gebruikers kunnen overweldigd zijn.`;
 
+// Dutch month names for natural speech
+const dutchMonths = [
+  'januari', 'februari', 'maart', 'april', 'mei', 'juni',
+  'juli', 'augustus', 'september', 'oktober', 'november', 'december'
+];
+
+// Format date in natural Dutch (e.g., "12 februari 2026" or "12 februari volgend jaar")
+function formatDateNatural(dateString: string): string {
+  const date = new Date(dateString);
+  const today = new Date();
+  const day = date.getDate();
+  const month = dutchMonths[date.getMonth()];
+  const year = date.getFullYear();
+  const currentYear = today.getFullYear();
+  
+  if (year === currentYear) {
+    return `${day} ${month}`;
+  } else if (year === currentYear + 1) {
+    return `${day} ${month} volgend jaar`;
+  } else {
+    return `${day} ${month} ${year}`;
+  }
+}
+
 // Helper function to calculate deadlines
 function calculateDeadlines(dismissalDate: string) {
   const dismissal = new Date(dismissalDate);
@@ -113,9 +137,13 @@ function calculateDeadlines(dismissalDate: string) {
   
   return {
     bezwaar_uwv: bezwaarUwv.toISOString().split('T')[0],
+    bezwaar_uwv_natural: formatDateNatural(bezwaarUwv.toISOString().split('T')[0]),
     kantonrechter: kantonrechter.toISOString().split('T')[0],
+    kantonrechter_natural: formatDateNatural(kantonrechter.toISOString().split('T')[0]),
     mensenrechten: mensenrechten.toISOString().split('T')[0],
-    dismissal_date: dismissalDate
+    mensenrechten_natural: formatDateNatural(mensenrechten.toISOString().split('T')[0]),
+    dismissal_date: dismissalDate,
+    dismissal_date_natural: formatDateNatural(dismissalDate)
   };
 }
 
@@ -167,8 +195,8 @@ async function executeToolCall(toolName: string, args: any, userId?: string) {
     }
     
     const saveMessage = savedToDb 
-      ? `Ik heb je ontslagdatum van ${args.dismissal_date} opgeslagen in je tijdlijn. `
-      : `Op basis van je ontslagdatum (${args.dismissal_date}) zijn hier de belangrijke termijnen. Log in om dit op te slaan. `;
+      ? `Ik heb je ontslagdatum van ${deadlines.dismissal_date_natural} opgeslagen in je tijdlijn. `
+      : `Op basis van je ontslagdatum (${deadlines.dismissal_date_natural}) zijn hier de belangrijke termijnen. Log in om dit op te slaan. `;
     
     return {
       success: true,
@@ -177,9 +205,9 @@ async function executeToolCall(toolName: string, args: any, userId?: string) {
       savedToDb,
       info: `
 Belangrijke termijnen:
-• Bezwaar bij UWV: uiterlijk ${deadlines.bezwaar_uwv}
-• Verzoekschrift kantonrechter: uiterlijk ${deadlines.kantonrechter}
-• College voor de Rechten van de Mens: aanbevolen vóór ${deadlines.mensenrechten}
+• Bezwaar bij UWV: uiterlijk ${deadlines.bezwaar_uwv_natural}
+• Verzoekschrift kantonrechter: uiterlijk ${deadlines.kantonrechter_natural}
+• College voor de Rechten van de Mens: aanbevolen vóór ${deadlines.mensenrechten_natural}
 
 WW-uitkering: Je kunt binnen 1 week na ontslag een WW-aanvraag doen bij het UWV. Je hebt recht op WW als je minimaal 26 weken hebt gewerkt in de afgelopen 36 weken.`
     };
