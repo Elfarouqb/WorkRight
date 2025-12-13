@@ -39,13 +39,30 @@ export function Hero() {
             {/* Main CTA - Hulp Button */}
             <div className="pt-4">
               <Link to="/hulp">
-                <Button size="lg" className="gap-3 text-lg font-semibold px-8 py-6 h-auto">
-                  <MessageCircle className="w-6 h-6" />
-                  Vraag hulp
-                  <span className="text-primary-foreground/70 text-sm ml-2">
-                    (spraak of tekst)
-                  </span>
-                </Button>
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      "0 0 0 0 hsl(var(--primary) / 0.4)",
+                      "0 0 0 12px hsl(var(--primary) / 0)",
+                      "0 0 0 0 hsl(var(--primary) / 0)"
+                    ]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="inline-block rounded-lg"
+                >
+                  <Button size="lg" className="gap-3 text-lg font-semibold px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-shadow">
+                    <MessageCircle className="w-6 h-6" />
+                    Vraag hulp
+                    <span className="text-primary-foreground/70 text-sm ml-2">
+                      (spraak of tekst)
+                    </span>
+                  </Button>
+                </motion.div>
               </Link>
             </div>
 
