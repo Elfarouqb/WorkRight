@@ -127,14 +127,23 @@ serve(async (req) => {
       let navigate = null;
       let responseText = assistantMessage;
       
+      // Clean up markdown code blocks if present
+      let cleanedMessage = assistantMessage.trim();
+      if (cleanedMessage.startsWith('```json')) {
+        cleanedMessage = cleanedMessage.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedMessage.startsWith('```')) {
+        cleanedMessage = cleanedMessage.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
       try {
-        const parsed = JSON.parse(assistantMessage);
+        const parsed = JSON.parse(cleanedMessage);
         if (parsed.navigate) {
           navigate = parsed.navigate;
-          responseText = parsed.message;
+          responseText = parsed.message || 'Ik navigeer je nu.';
         }
       } catch {
         // Not JSON, use as plain text
+        responseText = assistantMessage;
       }
 
       return new Response(JSON.stringify({ 
