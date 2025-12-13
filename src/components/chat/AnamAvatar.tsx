@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, VideoOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, Video, VideoOff, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,6 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startSession = useCallback(async () => {
@@ -156,22 +155,6 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
     }
   }, [isMicMuted]);
 
-  const toggleAudioMute = useCallback(() => {
-    const audioElement = document.getElementById('anam-audio-output') as HTMLAudioElement;
-    
-    const newMutedState = !isAudioMuted;
-    
-    if (audioElement) {
-      audioElement.muted = newMutedState;
-      if (!newMutedState) {
-        audioElement.volume = 1.0;
-        audioElement.play().catch(e => console.log('Audio play error:', e));
-      }
-      console.log('Audio muted set to:', newMutedState);
-    }
-    
-    setIsAudioMuted(newMutedState);
-  }, [isAudioMuted]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -252,15 +235,6 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
             animate={{ opacity: 1 }}
             className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
           >
-            <Button
-              size="icon"
-              variant={isAudioMuted ? "destructive" : "secondary"}
-              onClick={toggleAudioMute}
-              className="rounded-full h-10 w-10"
-              title={isAudioMuted ? "Geluid aan" : "Geluid uit"}
-            >
-              {isAudioMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
             <Button
               size="icon"
               variant={isMicMuted ? "destructive" : "secondary"}
