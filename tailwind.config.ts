@@ -14,12 +14,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        body: ['"Atkinson Hyperlegible"', 'system-ui', 'sans-serif'],
+        heading: ['Nunito', 'system-ui', 'sans-serif'],
+        body: ['Nunito', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        'display': ['3.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
-        'display-sm': ['2.5rem', { lineHeight: '1.15', letterSpacing: '-0.02em' }],
+        'display': ['3.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '800' }],
+        'display-sm': ['2.5rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' }],
       },
       colors: {
         border: "hsl(var(--border))",

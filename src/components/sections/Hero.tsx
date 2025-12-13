@@ -1,92 +1,96 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Volume2, Eye, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { ArrowRight, Shield, Heart, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden gradient-soft">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-      </div>
+    <section className="relative overflow-hidden py-16 md:py-24 lg:py-32">
+      {/* Background decoration */}
+      <div className="absolute inset-0 gradient-soft" />
+      <div className="absolute top-20 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
 
-      <div className="container relative py-20 md:py-28 lg:py-36">
+      <div className="container relative">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-secondary border border-border"
+            transition={{ duration: 0.6 }}
+            className="space-y-6"
           >
-            <span className="flex h-2 w-2 rounded-full bg-success animate-pulse-gentle" />
-            <span className="text-sm font-medium text-secondary-foreground">
-              Free • Confidential • No legal jargon
-            </span>
-          </motion.div>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
+              <Shield className="w-4 h-4" />
+              Gratis en vertrouwelijk
+            </div>
 
-          {/* Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-display-sm md:text-display font-heading text-balance mb-6"
-          >
-            Understand your rights{" "}
-            <span className="text-primary">after being fired</span>
-          </motion.h1>
+            {/* Headline */}
+            <h1 className="text-display-sm md:text-display font-heading font-extrabold text-foreground text-balance">
+              Begrijp je rechten na ontslag
+            </h1>
 
-          {/* Subheading */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-accessible text-muted-foreground readable-width mx-auto mb-8"
-          >
-            If you suspect you were dismissed unfairly because of who you are — 
-            your disability, race, gender, age, or faith — we're here to help you 
-            understand what comes next. Step by step. In plain words.
-          </motion.p>
+            {/* Subheadline */}
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Ontslagen en vermoed je discriminatie? Wij helpen je stap voor stap. 
+              Geen juridische taal, geen oordeel - gewoon duidelijke uitleg en praktische hulp.
+            </p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
-          >
-            <Button variant="hero" size="xl">
-              Start Your Journey
-              <ArrowRight className="ml-2" />
-            </Button>
-            <Button variant="calm" size="xl">
-              <Volume2 className="mr-2" />
-              Listen to This Page
-            </Button>
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link to="/rechtenverkenner">
+                <Button size="lg" className="w-full sm:w-auto gap-2 text-base font-semibold">
+                  Start de Rechtenverkenner
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/procesgids">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-semibold">
+                  Bekijk de Procesgids
+                </Button>
+              </Link>
+            </div>
           </motion.div>
 
           {/* Trust indicators */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6"
           >
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <span>Designed for accessibility</span>
+            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-card border border-border/50 shadow-soft">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Heart className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-foreground">Geen oordeel</p>
+                <p className="text-sm text-muted-foreground">We luisteren</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <span>UK Employment Law</span>
+            
+            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-card border border-border/50 shadow-soft">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-foreground">Termijn-alerts</p>
+                <p className="text-sm text-muted-foreground">Nooit te laat</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-card border border-border/50 shadow-soft">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-foreground">100% privé</p>
+                <p className="text-sm text-muted-foreground">Jouw gegevens</p>
+              </div>
             </div>
           </motion.div>
         </div>
       </div>
-
-      {/* Bottom wave decoration */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }

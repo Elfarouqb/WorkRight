@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WorkRight Navigator – strakke cirkel, minimalistisch en modern -->
+<svg width="340" height="110"
+     viewBox="0 0 340 110"
+     xmlns="http://www.w3.org/2000/svg"
+     role="img"
+     aria-label="WorkRight Navigator logo">
+
+  <!-- ==== Definities ==== -->
+  <defs>
+    <!-- Groene gradient voor de pijl -->
+    <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#2A9D8F"/>
+      <stop offset="100%" stop-color="#21867A"/>
+    </linearGradient>
+
+    <!-- Subtiele schaduw voor diepte -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- ==== Groene pijl (kompas) ==== -->
+  <g filter="url(#shadow)">
+    <path d="M30 55
+             L130 20
+             Q135 17 140 20
+             L140 30
+             Q135 27 130 30
+             L80 55
+             L130 80
+             Q135 83 140 80
+             L140 90
+             Q135 93 130 90
+             Z"
+          fill="url(#gradGreen)"/>
+  </g>
+
+  <!-- ==== Strakke gele cirkel (accent) ==== -->
+  <circle cx="100" cy="55" r="34"
+          fill="#E9C46A"
+          opacity="0.12"/>
+
+  <!-- ==== Gestileerd poppetje – strakke lijnen ==== -->
+  <g fill="none"
+     stroke="#E9C46A"
+     stroke-width="5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     filter="url(#shadow)">
+    <!-- Hoofd -->
+    <circle cx="100" cy="42" r="8"/>
+    <!-- Lichaam -->
+    <path d="M100 50 v14"/>
+    <!-- Armen -->
+    <path d="M100 56 h-18 M100 56 h18"/>
+    <!-- Benen -->
+    <path d="M100 64 l-12 16 M100 64 l12 16"/>
+  </g>
+
+  <!-- ==== Tekst “WorkRight” ==== -->
+  <text x="170"
+        y="58"
+        font-family="Nunito,Arial,sans-serif"
+        font-weight="700"
+        font-size="30"
+        fill="#2A9D8F"
+        dominant-baseline="middle">
+    WorkRight
+  </text>
+
+  <!-- ==== Tekst “Navigator” ==== -->
+  <text x="170"
+        y="88"
+        font-family="Nunito,Arial,sans-serif"
+        font-weight="400"
+        font-size="22"
+        fill="#2A9D8F"
+        dominant-baseline="middle">
+    Navigator
+  </text>
+</svg>
