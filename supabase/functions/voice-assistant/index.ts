@@ -6,26 +6,31 @@ const corsHeaders = {
 };
 
 const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
-const GREENPT_API_KEY = Deno.env.get('GREENPT_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-const systemPrompt = `Je bent een behulpzame spraakassistent voor WorkRight Navigator, een tool die mensen helpt bij arbeidsrechtelijke kwesties na ontslag in Nederland. 
+const systemPrompt = `Je bent een GESPECIALISEERDE spraakassistent voor arbeidsrecht en discriminatie bij ontslag in Nederland.
+
+ABSOLUTE BEPERKINGEN:
+- Je bent UITSLUITEND bedoeld voor vragen over ontslag, arbeidsrecht en discriminatie in Nederland.
+- Bij vragen die NIET gaan over ontslag, arbeidsrecht of discriminatie, zeg: "Ik kan je alleen helpen met vragen over ontslag en arbeidsrechten in Nederland."
 
 Je belangrijkste taken:
-1. Navigatie: Help gebruikers naar de juiste pagina's te gaan (Rechtenverkenner, Tijdlijn, Termijnen, Procesgids)
-2. Informatie: Beantwoord vragen over arbeidsrecht, discriminatie en ontslagprocedures
-3. Ondersteuning: Wees empathisch en begripvol - gebruikers kunnen overweldigd zijn
+1. Navigatie: Help gebruikers naar de juiste pagina's te gaan
+2. Informatie: Beantwoord vragen over arbeidsrecht en discriminatie
+3. Ondersteuning: Wees empathisch - gebruikers kunnen overweldigd zijn
 
-Navigatie commando's die je kunt herkennen:
+Navigatie commando's:
 - "ga naar rechtenverkenner" of "open rechtenverkenner" -> navigeer naar /rechtenverkenner
 - "ga naar tijdlijn" of "open tijdlijn" -> navigeer naar /tijdlijn  
 - "ga naar termijnen" of "open termijnen" -> navigeer naar /termijnen
 - "ga naar procesgids" of "open procesgids" -> navigeer naar /procesgids
 - "ga naar home" of "terug naar begin" -> navigeer naar /
+- "ga naar hulp" of "ik heb hulp nodig" -> navigeer naar /hulp
 
 Als je navigatie detecteert, antwoord dan met JSON: {"navigate": "/pad", "message": "korte bevestiging"}
 Voor gewone antwoorden, geef gewoon tekst terug.
 
-Houd antwoorden kort en duidelijk (max 2-3 zinnen voor spraak).
+Houd antwoorden kort (max 2-3 zinnen voor spraak).
 Gebruik eenvoudige taal, vermijd juridisch jargon.`;
 
 serve(async (req) => {
@@ -80,13 +85,13 @@ serve(async (req) => {
       });
     }
 
-    // Chat with GreenPT
+    // Chat with Lovable AI
     if (action === 'chat') {
       if (!text) {
         throw new Error('No text provided');
       }
 
-      console.log('Sending to GreenPT:', text);
+      console.log('Sending to Lovable AI:', text);
 
       const chatMessages = [
         { role: 'system', content: systemPrompt },
@@ -94,14 +99,14 @@ serve(async (req) => {
         { role: 'user', content: text }
       ];
 
-      const chatResponse = await fetch('https://api.greenpt.io/v1/chat/completions', {
+      const chatResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${GREENPT_API_KEY}`,
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'google/gemini-2.5-flash',
           messages: chatMessages,
           max_tokens: 500,
           temperature: 0.7,
@@ -110,13 +115,13 @@ serve(async (req) => {
 
       if (!chatResponse.ok) {
         const errorText = await chatResponse.text();
-        console.error('GreenPT error:', errorText);
-        throw new Error(`GreenPT error: ${chatResponse.status}`);
+        console.error('Lovable AI error:', errorText);
+        throw new Error(`Lovable AI error: ${chatResponse.status}`);
       }
 
       const chatResult = await chatResponse.json();
       const assistantMessage = chatResult.choices?.[0]?.message?.content || '';
-      console.log('GreenPT response:', assistantMessage);
+      console.log('Lovable AI response:', assistantMessage);
 
       // Check if response contains navigation
       let navigate = null;
