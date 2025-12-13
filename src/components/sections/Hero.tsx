@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Shield, Heart, Clock, MessageCircle } from "lucide-react";
+import { ArrowRight, Shield, Heart, Clock, MessageCircle, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 export function Hero() {
-  const { t } = useLanguage();
-
   return (
     <section className="relative overflow-hidden py-16 md:py-24 lg:py-32">
       {/* Background decoration */}
@@ -25,17 +22,18 @@ export function Hero() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
               <Shield className="w-4 h-4" />
-              {t("hero.badge")}
+              Gratis en vertrouwelijk
             </div>
 
             {/* Headline */}
             <h1 className="text-display-sm md:text-display font-heading font-extrabold text-foreground text-balance">
-              {t("hero.title")}
+              Begrijp je rechten na ontslag
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {t("hero.subtitle")}
+              Ontslagen en vermoed je discriminatie? Wij helpen je stap voor stap. 
+              Geen juridische taal, geen oordeel - gewoon duidelijke uitleg en praktische hulp.
             </p>
 
             {/* Main CTA - Hulp Button */}
@@ -59,9 +57,9 @@ export function Hero() {
                 >
                   <Button size="lg" className="gap-3 text-lg font-semibold px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-shadow">
                     <MessageCircle className="w-6 h-6" />
-                    {t("hero.getHelp")}
+                    Get help
                     <span className="text-primary-foreground/70 text-sm ml-2">
-                      {t("hero.voiceOrText")}
+                      (voice or text)
                     </span>
                   </Button>
                 </motion.div>
@@ -72,13 +70,13 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Link to="/rechtenverkenner">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 text-base font-semibold">
-                  {t("hero.startExplorer")}
+                  Start de Rechtenverkenner
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
               <Link to="/procesgids">
                 <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base font-semibold">
-                  {t("hero.viewGuide")}
+                  Bekijk de Procesgids
                 </Button>
               </Link>
             </div>
@@ -96,8 +94,8 @@ export function Hero() {
                 <Heart className="w-5 h-5 text-primary" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-foreground">{t("hero.noJudgment")}</p>
-                <p className="text-sm text-muted-foreground">{t("hero.weListen")}</p>
+                <p className="font-semibold text-foreground">Geen oordeel</p>
+                <p className="text-sm text-muted-foreground">We luisteren</p>
               </div>
             </div>
             
@@ -106,8 +104,8 @@ export function Hero() {
                 <Clock className="w-5 h-5 text-accent-foreground" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-foreground">{t("hero.deadlineAlerts")}</p>
-                <p className="text-sm text-muted-foreground">{t("hero.neverLate")}</p>
+                <p className="font-semibold text-foreground">Termijn-alerts</p>
+                <p className="text-sm text-muted-foreground">Nooit te laat</p>
               </div>
             </div>
             
@@ -116,8 +114,8 @@ export function Hero() {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-foreground">{t("hero.private")}</p>
-                <p className="text-sm text-muted-foreground">{t("hero.yourData")}</p>
+                <p className="font-semibold text-foreground">100% privé</p>
+                <p className="text-sm text-muted-foreground">Jouw gegevens</p>
               </div>
             </div>
           </motion.div>

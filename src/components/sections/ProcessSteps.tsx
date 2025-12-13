@@ -1,41 +1,38 @@
 import { motion } from "framer-motion";
-import { useLanguage } from "@/contexts/LanguageContext";
+
+const steps = [
+  {
+    step: 1,
+    title: "Verken je situatie",
+    description: "Beantwoord vragen over wat er is gebeurd. Geen juridische taal, gewoon simpele vragen.",
+  },
+  {
+    step: 2,
+    title: "Documenteer alles",
+    description: "Bouw een tijdlijn van gebeurtenissen. Dit helpt bij gesprekken met adviseurs.",
+  },
+  {
+    step: 3,
+    title: "Begrijp je opties",
+    description: "Leer welke stappen je kunt zetten en welke termijnen belangrijk zijn.",
+  },
+  {
+    step: 4,
+    title: "Zoek hulp",
+    description: "Neem contact op met Het Juridisch Loket of andere hulpbronnen met een duidelijk verhaal.",
+  },
+];
 
 export function ProcessSteps() {
-  const { t } = useLanguage();
-
-  const steps = [
-    {
-      step: 1,
-      title: t("steps.step1.title"),
-      description: t("steps.step1.desc"),
-    },
-    {
-      step: 2,
-      title: t("steps.step2.title"),
-      description: t("steps.step2.desc"),
-    },
-    {
-      step: 3,
-      title: t("steps.step3.title"),
-      description: t("steps.step3.desc"),
-    },
-    {
-      step: 4,
-      title: t("steps.step4.title"),
-      description: t("steps.step4.desc"),
-    },
-  ];
-
   return (
     <section id="how-it-works" className="py-16 md:py-24">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-display-sm font-heading font-bold text-foreground mb-4">
-            {t("steps.title")}
+            Hoe het werkt
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t("steps.subtitle")}
+            Stap voor stap naar duidelijkheid. Op je eigen tempo.
           </p>
         </div>
 

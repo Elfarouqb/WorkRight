@@ -1,10 +1,7 @@
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 import logo from "@/assets/logo.svg";
 
 export function Footer() {
-  const { t } = useLanguage();
-
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="container py-12">
@@ -15,35 +12,36 @@ export function Footer() {
               <img src={logo} alt="WorkRight Navigator" className="h-10" />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
-              {t("footer.description")}
+              Gratis hulp voor werknemers die discriminatie vermoeden. 
+              Wij helpen je je rechten te begrijpen en je voor te bereiden op het proces.
             </p>
             <p className="text-xs text-muted-foreground mt-4">
-              {t("footer.disclaimer")}
+              Dit is een hulpmiddel, geen juridisch advies. Neem altijd contact op met een professional.
             </p>
           </div>
 
           {/* Tools */}
           <div>
-            <h4 className="font-heading font-bold text-foreground mb-4">{t("footer.tools")}</h4>
+            <h4 className="font-heading font-bold text-foreground mb-4">Tools</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/rechtenverkenner" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {t("nav.rechtenverkenner")}
+                  Rechtenverkenner
                 </Link>
               </li>
               <li>
                 <Link to="/tijdlijn" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {t("features.timeline.title")}
+                  Tijdlijnbouwer
                 </Link>
               </li>
               <li>
                 <Link to="/termijnen" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {t("features.deadline.title")}
+                  Termijnberekener
                 </Link>
               </li>
               <li>
                 <Link to="/procesgids" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {t("nav.procesgids")}
+                  Procesgids
                 </Link>
               </li>
             </ul>
@@ -51,7 +49,7 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="font-heading font-bold text-foreground mb-4">{t("footer.resources")}</h4>
+            <h4 className="font-heading font-bold text-foreground mb-4">Hulpbronnen</h4>
             <ul className="space-y-2">
               <li>
                 <a 
@@ -99,7 +97,7 @@ export function Footer() {
 
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} WorkRight Navigator. {t("footer.copyright")}
+            © {new Date().getFullYear()} WorkRight Navigator. Met zorg gemaakt voor iedereen.
           </p>
         </div>
       </div>
