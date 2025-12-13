@@ -78,7 +78,7 @@ serve(async (req) => {
           name: 'Mira',
           avatarId: '30fa96d0-26c4-4e55-94a0-517025942e18', // Cara avatar
           voiceId: '6bfbe25a-979d-40f3-a92b-5394170af54b', // Cara voice
-          llmId: '4c7eae70-84c1-4c38-b030-14faa856727b', // Custom GreenPT LLM
+          llmId: '0934d97d-0c3a-4f33-91b0-5e136a0ef466', // Default Anam LLM
           systemPrompt: SYSTEM_PROMPT,
         },
       }),
