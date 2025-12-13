@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, Send, Trash2, Heart, MessageSquare } from 'lucide-react';
+import { Loader2, Send, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
 import { useChat } from '@/hooks/useChat';
 import { AiAvatar } from '@/components/chat/AiAvatar';
+import { AnamAvatar } from '@/components/chat/AnamAvatar';
 import { cn } from '@/lib/utils';
 
 const suggestedQuestions = [
@@ -17,20 +17,6 @@ const suggestedQuestions = [
 ];
 
 const Hulp = () => {
-  // Voice assistant state
-  const {
-    isListening,
-    isProcessing,
-    isSpeaking,
-    messages: voiceMessages,
-    transcript,
-    error: voiceError,
-    startListening,
-    stopListening,
-    stopSpeaking,
-    clearMessages: clearVoiceMessages,
-  } = useVoiceAssistant();
-
   // Text chat state
   const [input, setInput] = useState('');
   const { messages: chatMessages, isLoading, error: chatError, sendMessage, clearMessages: clearChatMessages } = useChat();
@@ -44,14 +30,6 @@ const Hulp = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
-
-  const handleToggleListening = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +50,6 @@ const Hulp = () => {
     }
   };
 
-  const isVoiceActive = isListening || isProcessing || isSpeaking;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -85,203 +61,31 @@ const Hulp = () => {
             Hulp & Ondersteuning
           </h1>
           <p className="text-muted-foreground">
-            Kies hoe je hulp wilt krijgen: spraak of tekst
+            Kies hoe je hulp wilt krijgen: video of tekst
           </p>
         </div>
 
         {/* Two Panel Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 max-w-6xl mx-auto">
-          {/* Left Panel - Voice Assistant */}
+          {/* Left Panel - Video Avatar */}
           <div className="lg:border-r lg:border-border lg:pr-6">
             <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[600px] flex flex-col">
-              {/* Voice Header */}
+              {/* Avatar Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "w-3 h-3 rounded-full",
-                    isVoiceActive ? "bg-primary animate-pulse" : "bg-muted-foreground"
-                  )} />
-                  <span className="font-heading font-semibold text-foreground">Spraakassistent</span>
+                  <div className="w-3 h-3 rounded-full bg-primary" />
+                  <span className="font-heading font-semibold text-foreground">Video Assistent</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={clearVoiceMessages}
-                  disabled={voiceMessages.length === 0}
-                  className="h-8 w-8"
-                  aria-label="Wis gesprek"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
 
-              {/* Voice Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {voiceMessages.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8 space-y-4">
-                    {/* AI Avatar */}
-                    <div className="flex justify-center mb-4">
-                      <AiAvatar 
-                        isListening={isListening} 
-                        isProcessing={isProcessing} 
-                        isSpeaking={isSpeaking}
-                        size="lg"
-                      />
-                    </div>
-                    <p className="text-lg font-medium">Hoi, ik ben Mira</p>
-                    <p className="text-sm opacity-75">
-                      Druk op de microfoon knop en stel je vraag
-                    </p>
-                    <p className="text-xs opacity-60">
-                      Je kunt ook zeggen: "Ga naar tijdlijn" om te navigeren
-                    </p>
-                  </div>
-                ) : (
-                  voiceMessages.map((msg, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={cn(
-                        "flex items-start gap-2",
-                        msg.role === 'user' ? "flex-row-reverse" : ""
-                      )}
-                    >
-                      {msg.role === 'assistant' && (
-                        <AiAvatar 
-                          isSpeaking={index === voiceMessages.length - 1 && isSpeaking}
-                          size="sm" 
-                          className="shrink-0 mt-1"
-                        />
-                      )}
-                      <div
-                        className={cn(
-                          "p-4 rounded-xl max-w-[80%]",
-                          msg.role === 'user'
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground border border-border/50"
-                        )}
-                      >
-                        {msg.role === 'assistant' ? (
-                          <div className="space-y-2">
-                            {msg.content.split('\n').map((line, i) => {
-                              if (line.startsWith('•')) {
-                                return (
-                                  <p key={i} className="text-sm pl-2 border-l-2 border-primary/30">
-                                    {line.substring(1).trim()}
-                                  </p>
-                                );
-                              }
-                              if (line.includes(':') && !line.startsWith('http')) {
-                                const [label, ...rest] = line.split(':');
-                                return (
-                                  <p key={i} className="text-sm">
-                                    <span className="font-semibold text-primary">{label}:</span>
-                                    {rest.join(':')}
-                                  </p>
-                                );
-                              }
-                              return line.trim() ? (
-                                <p key={i} className="text-sm">{line}</p>
-                              ) : null;
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-sm">{msg.content}</p>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))
-                )}
-
-                {/* Current transcript */}
-                {isListening && transcript && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-3 rounded-xl text-sm bg-primary/20 text-foreground ml-8 italic"
-                  >
-                    {transcript}...
-                  </motion.div>
-                )}
-
-                {/* Processing indicator */}
-                {isProcessing && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-2 p-3 text-sm text-muted-foreground"
-                  >
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Even denken...</span>
-                  </motion.div>
-                )}
-
-                {/* Speaking indicator with stop button */}
-                {isSpeaking && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-between p-3 text-sm text-muted-foreground bg-accent/10 rounded-lg"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 animate-pulse text-primary" />
-                      <span>Aan het spreken...</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={stopSpeaking}
-                      className="h-7 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <VolumeX className="h-3 w-3 mr-1" />
-                      Stop
-                    </Button>
-                  </motion.div>
-                )}
-
-                {/* Error */}
-                {voiceError && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-3 rounded-xl text-sm bg-destructive/20 text-destructive"
-                  >
-                    {voiceError}
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Voice Controls */}
-              <div className="p-6 border-t border-border bg-muted/30">
-                <div className="flex items-center justify-center">
-                  <Button
-                    onClick={handleToggleListening}
-                    disabled={isProcessing || isSpeaking}
-                    size="lg"
-                    className={cn(
-                      "h-20 w-20 rounded-full transition-all duration-300",
-                      isListening 
-                        ? "bg-destructive hover:bg-destructive/90 animate-pulse" 
-                        : "bg-primary hover:bg-primary/90"
-                    )}
-                    aria-label={isListening ? "Stop met luisteren" : "Begin met luisteren"}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    ) : isListening ? (
-                      <MicOff className="h-8 w-8" />
-                    ) : (
-                      <Mic className="h-8 w-8" />
-                    )}
-                  </Button>
-                </div>
-                
-                <p className="text-center text-sm text-muted-foreground mt-4">
-                  {isListening 
-                    ? "Ik luister... Druk nogmaals om te stoppen" 
-                    : "Druk om te spreken"}
-                </p>
+              {/* Anam Video Avatar */}
+              <div className="flex-1 flex items-center justify-center p-4">
+                <AnamAvatar 
+                  onMessage={(msg) => {
+                    console.log('Anam message:', msg);
+                  }}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
@@ -451,23 +255,26 @@ const Hulp = () => {
                     type="submit"
                     size="icon"
                     disabled={!input.trim() || isLoading}
-                    className="shrink-0 w-12 h-12 rounded-xl"
+                    className="h-12 w-12 rounded-xl shrink-0"
                     aria-label="Verstuur bericht"
                   >
                     {isLoading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <Send className="w-5 h-5" />
+                      <Send className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Ik help je te begrijpen - dit is geen juridisch advies.
-                </p>
               </form>
             </div>
           </div>
         </div>
+
+        {/* Privacy Note */}
+        <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
+          Je privacy is belangrijk. Alles wat je deelt blijft vertrouwelijk en wordt alleen gebruikt om je te helpen. 
+          We geven geen juridisch advies - we helpen je voorbereiden op gesprekken met professionals.
+        </p>
       </main>
 
       <Footer />

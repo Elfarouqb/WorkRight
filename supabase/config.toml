@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.voice-assistant]
 verify_jwt = false
+
+[functions.anam-session]
+verify_jwt = false
