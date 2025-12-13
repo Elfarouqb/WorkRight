@@ -1,12 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { Hero } from "@/components/sections/Hero";
+import { ProcessSteps } from "@/components/sections/ProcessSteps";
+import { Features } from "@/components/sections/Features";
+import { DeadlineAlert } from "@/components/sections/DeadlineAlert";
+import { Reassurance } from "@/components/sections/Reassurance";
+import { ProtectedCharacteristics } from "@/components/sections/ProtectedCharacteristics";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <Hero />
+        <ProcessSteps />
+        <ProtectedCharacteristics />
+        <Features />
+        <DeadlineAlert />
+        <Reassurance />
+      </main>
+      <Footer />
     </div>
   );
 };
