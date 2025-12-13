@@ -147,6 +147,40 @@
   ::selection {
     @apply bg-primary/20 text-foreground;
   }
+
+  /* Dyslexia-friendly font mode */
+  .font-dyslexic body,
+  .font-dyslexic p,
+  .font-dyslexic span,
+  .font-dyslexic li,
+  .font-dyslexic a,
+  .font-dyslexic button,
+  .font-dyslexic input,
+  .font-dyslexic textarea {
+    font-family: 'OpenDyslexic', 'Atkinson Hyperlegible', sans-serif !important;
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+    line-height: 1.8;
+  }
+
+  .font-dyslexic h1,
+  .font-dyslexic h2,
+  .font-dyslexic h3,
+  .font-dyslexic h4,
+  .font-dyslexic h5,
+  .font-dyslexic h6 {
+    font-family: 'OpenDyslexic', 'DM Sans', sans-serif !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* Text size modes */
+  .text-size-large {
+    font-size: 112.5%; /* 18px base */
+  }
+
+  .text-size-larger {
+    font-size: 125%; /* 20px base */
+  }
 }
 
 @layer utilities {
