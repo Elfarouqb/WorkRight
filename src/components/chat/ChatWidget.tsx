@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Trash2, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Trash2, Loader2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '@/hooks/useChat';
 import { cn } from '@/lib/utils';
+
+const suggestedQuestions = [
+  "I was let go and I'm not sure why",
+  "What counts as discrimination?",
+  "How much time do I have?",
+  "What is ACAS?",
+];
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +38,11 @@ export const ChatWidget = () => {
     if (!input.trim() || isLoading) return;
     sendMessage(input.trim());
     setInput('');
+  };
+
+  const handleSuggestionClick = (question: string) => {
+    if (isLoading) return;
+    sendMessage(question);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -119,14 +131,49 @@ export const ChatWidget = () => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 && (
-                <div className="text-center py-8">
-                  <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    Ask me anything about UK employment rights, dismissal, or discrimination.
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    I'm here to help you understand, not to give legal advice.
-                  </p>
+                <div className="py-4 space-y-4">
+                  {/* Welcome message */}
+                  <div className="bg-secondary/50 rounded-xl p-4 border border-border">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Heart className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-foreground text-sm leading-relaxed">
+                          Hello. I'm here to help you understand what happened at work. Take your time - there's no rush.
+                        </p>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          You can ask me anything. I won't judge, and everything you share stays private.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Suggested questions */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Not sure where to start? Try one of these:
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {suggestedQuestions.map((question, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSuggestionClick(question)}
+                          disabled={isLoading}
+                          className={cn(
+                            "px-3 py-2 text-xs rounded-full",
+                            "bg-muted hover:bg-muted/80 text-foreground",
+                            "border border-border hover:border-primary/30",
+                            "transition-colors duration-200",
+                            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
+                          )}
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -142,7 +189,8 @@ export const ChatWidget = () => {
                 >
                   <div
                     className={cn(
-                      "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
+                      "max-w-[85%] px-4 py-3 rounded-2xl leading-relaxed",
+                      "text-sm sm:text-base",
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'bg-muted text-foreground rounded-bl-md'
@@ -159,8 +207,9 @@ export const ChatWidget = () => {
                   animate={{ opacity: 1 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md">
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Thinking...</span>
                   </div>
                 </motion.div>
               )}
@@ -169,14 +218,16 @@ export const ChatWidget = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-2"
+                  className="bg-destructive/10 rounded-xl p-4 text-center"
                 >
-                  <p className="text-destructive text-sm">{error}</p>
+                  <p className="text-foreground text-sm mb-2">
+                    Something went wrong, but that's okay. These things happen.
+                  </p>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => sendMessage(messages[messages.length - 1]?.content || '')}
-                    className="mt-1 text-xs"
+                    className="text-sm"
                   >
                     Try again
                   </Button>
@@ -194,33 +245,33 @@ export const ChatWidget = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Type your question..."
+                  placeholder="What's on your mind?"
                   className={cn(
                     "flex-1 resize-none rounded-xl px-4 py-3",
                     "bg-muted text-foreground placeholder:text-muted-foreground",
                     "border-0 focus:ring-2 focus:ring-ring focus:outline-none",
-                    "text-sm min-h-[44px] max-h-[120px]"
+                    "text-sm sm:text-base min-h-[48px] max-h-[120px]"
                   )}
                   rows={1}
                   disabled={isLoading}
-                  aria-label="Type your message"
+                  aria-label="Type your question or describe what happened"
                 />
                 <Button
                   type="submit"
                   size="icon"
                   disabled={!input.trim() || isLoading}
-                  className="shrink-0 w-11 h-11 rounded-xl"
+                  className="shrink-0 w-12 h-12 rounded-xl"
                   aria-label="Send message"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <Send className="w-5 h-5" />
                   )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                This is guidance only, not legal advice.
+                I'm here to help you understand - not to give legal advice.
               </p>
             </form>
           </motion.div>
