@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
 import { useChat } from '@/hooks/useChat';
+import { AiAvatar } from '@/components/chat/AiAvatar';
 import { cn } from '@/lib/utils';
 
 const suggestedQuestions = [
@@ -117,13 +118,21 @@ const Hulp = () => {
               {/* Voice Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {voiceMessages.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-12">
-                    <Mic className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium mb-2">Praat met mij</p>
+                  <div className="text-center text-muted-foreground py-8 space-y-4">
+                    {/* AI Avatar */}
+                    <div className="flex justify-center mb-4">
+                      <AiAvatar 
+                        isListening={isListening} 
+                        isProcessing={isProcessing} 
+                        isSpeaking={isSpeaking}
+                        size="lg"
+                      />
+                    </div>
+                    <p className="text-lg font-medium">Hoi, ik ben Mira</p>
                     <p className="text-sm opacity-75">
                       Druk op de microfoon knop en stel je vraag
                     </p>
-                    <p className="text-xs mt-2 opacity-60">
+                    <p className="text-xs opacity-60">
                       Je kunt ook zeggen: "Ga naar tijdlijn" om te navigeren
                     </p>
                   </div>
@@ -134,39 +143,53 @@ const Hulp = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={cn(
-                        "p-4 rounded-xl",
-                        msg.role === 'user'
-                          ? "bg-primary text-primary-foreground ml-8"
-                          : "bg-muted text-foreground mr-4 border border-border/50"
+                        "flex items-start gap-2",
+                        msg.role === 'user' ? "flex-row-reverse" : ""
                       )}
                     >
-                      {msg.role === 'assistant' ? (
-                        <div className="space-y-2">
-                          {msg.content.split('\n').map((line, i) => {
-                            if (line.startsWith('•')) {
-                              return (
-                                <p key={i} className="text-sm pl-2 border-l-2 border-primary/30">
-                                  {line.substring(1).trim()}
-                                </p>
-                              );
-                            }
-                            if (line.includes(':') && !line.startsWith('http')) {
-                              const [label, ...rest] = line.split(':');
-                              return (
-                                <p key={i} className="text-sm">
-                                  <span className="font-semibold text-primary">{label}:</span>
-                                  {rest.join(':')}
-                                </p>
-                              );
-                            }
-                            return line.trim() ? (
-                              <p key={i} className="text-sm">{line}</p>
-                            ) : null;
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-sm">{msg.content}</p>
+                      {msg.role === 'assistant' && (
+                        <AiAvatar 
+                          isSpeaking={index === voiceMessages.length - 1 && isSpeaking}
+                          size="sm" 
+                          className="shrink-0 mt-1"
+                        />
                       )}
+                      <div
+                        className={cn(
+                          "p-4 rounded-xl max-w-[80%]",
+                          msg.role === 'user'
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground border border-border/50"
+                        )}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <div className="space-y-2">
+                            {msg.content.split('\n').map((line, i) => {
+                              if (line.startsWith('•')) {
+                                return (
+                                  <p key={i} className="text-sm pl-2 border-l-2 border-primary/30">
+                                    {line.substring(1).trim()}
+                                  </p>
+                                );
+                              }
+                              if (line.includes(':') && !line.startsWith('http')) {
+                                const [label, ...rest] = line.split(':');
+                                return (
+                                  <p key={i} className="text-sm">
+                                    <span className="font-semibold text-primary">{label}:</span>
+                                    {rest.join(':')}
+                                  </p>
+                                );
+                              }
+                              return line.trim() ? (
+                                <p key={i} className="text-sm">{line}</p>
+                              ) : null;
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-sm">{msg.content}</p>
+                        )}
+                      </div>
                     </motion.div>
                   ))
                 )}
@@ -299,12 +322,10 @@ const Hulp = () => {
                     {/* Welcome message */}
                     <div className="bg-secondary/50 rounded-xl p-4 border border-border">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <Heart className="w-4 h-4 text-primary" />
-                        </div>
+                        <AiAvatar size="sm" className="shrink-0" />
                         <div className="space-y-2">
                           <p className="text-foreground text-sm leading-relaxed">
-                            Hallo. Ik ben hier om je te helpen begrijpen wat er op je werk is gebeurd. Neem je tijd - er is geen haast.
+                            <span className="font-semibold">Hoi, ik ben Mira.</span> Ik ben hier om je te helpen begrijpen wat er op je werk is gebeurd. Neem je tijd - er is geen haast.
                           </p>
                           <p className="text-muted-foreground text-sm leading-relaxed">
                             Je kunt me alles vragen. Ik oordeel niet, en alles wat je deelt blijft privé.
@@ -347,13 +368,19 @@ const Hulp = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
-                      "flex",
-                      msg.role === 'user' ? 'justify-end' : 'justify-start'
+                      "flex items-start gap-2",
+                      msg.role === 'user' ? 'flex-row-reverse' : ''
                     )}
                   >
+                    {msg.role === 'assistant' && (
+                      <AiAvatar 
+                        size="sm" 
+                        className="shrink-0 mt-1"
+                      />
+                    )}
                     <div
                       className={cn(
-                        "max-w-[85%] px-4 py-3 rounded-2xl leading-relaxed",
+                        "max-w-[80%] px-4 py-3 rounded-2xl leading-relaxed",
                         "text-sm",
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground rounded-br-md'
@@ -369,10 +396,10 @@ const Hulp = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex justify-start"
+                    className="flex items-start gap-2"
                   >
+                    <AiAvatar isProcessing size="sm" className="shrink-0 mt-1" />
                     <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       <span className="text-sm text-muted-foreground">Even denken...</span>
                     </div>
                   </motion.div>
