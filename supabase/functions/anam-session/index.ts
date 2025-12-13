@@ -60,7 +60,7 @@ serve(async (req) => {
 
     console.log('Requesting Anam session token...');
 
-    // Request session token from Anam AI
+    // Request session token from Anam AI with full persona configuration
     const response = await fetch('https://api.anam.ai/v1/auth/session-token', {
       method: 'POST',
       headers: {
@@ -69,6 +69,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         personaConfig: {
+          name: 'Mira',
+          avatarId: '30fa96d0-26c4-4e55-94a0-517025942e18', // Cara avatar
+          voiceId: '6bfbe25a-979d-40f3-a92b-5394170af54b', // Cara voice
+          llmId: '0934d97d-0c3a-4f33-91b0-5e136a0ef466', // Default LLM
           systemPrompt: SYSTEM_PROMPT,
         },
       }),
