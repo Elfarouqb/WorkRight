@@ -1,27 +1,33 @@
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import logo from "@/assets/logo.svg";
-
-const navLinks = [
-  { href: "/rechtenverkenner", label: "Rechtenverkenner" },
-  { href: "/tijdlijn", label: "Tijdlijn" },
-  { href: "/termijnen", label: "Termijnen" },
-  { href: "/procesgids", label: "Procesgids" },
-];
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
+
+  const navLinks = [
+    { href: "/rechtenverkenner", label: t.navRechtenverkenner },
+    { href: "/tijdlijn", label: t.navTijdlijn },
+    { href: "/termijnen", label: t.navTermijnen },
+    { href: "/procesgids", label: t.navProcesgids },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'nl' ? 'en' : 'nl');
   };
 
   return (
@@ -51,13 +57,23 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleLanguage}
+            className="gap-2"
+            aria-label={language === 'nl' ? 'Switch to English' : 'Naar Nederlands'}
+          >
+            <Globe className="w-4 h-4" />
+            {language === 'nl' ? 'EN' : 'NL'}
+          </Button>
           <AccessibilityToolbar />
           {user ? (
             <div className="flex items-center gap-2">
               <Link to="/tijdlijn">
                 <Button variant="outline" size="sm" className="gap-2">
                   <User className="w-4 h-4" />
-                  Mijn tijdlijn
+                  {t.myTimeline}
                 </Button>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
@@ -67,7 +83,7 @@ export function Header() {
           ) : (
             <Link to="/auth">
               <Button variant="default" size="default">
-                Inloggen
+                {t.login}
               </Button>
             </Link>
           )}
@@ -79,7 +95,7 @@ export function Header() {
           size="icon"
           className="lg:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? "Menu sluiten" : "Menu openen"}
+          aria-label={isMobileMenuOpen ? t.closeMenu : t.openMenu}
         >
           {isMobileMenuOpen ? <X /> : <Menu />}
         </Button>
@@ -106,24 +122,32 @@ export function Header() {
                 </Link>
               ))}
               <div className="pt-2 border-t border-border mt-2 flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={toggleLanguage}
+                  className="w-full gap-2 justify-start"
+                >
+                  <Globe className="w-4 h-4" />
+                  {language === 'nl' ? 'English' : 'Nederlands'}
+                </Button>
                 <AccessibilityToolbar />
                 {user ? (
                   <>
                     <Link to="/tijdlijn" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full gap-2">
                         <User className="w-4 h-4" />
-                        Mijn tijdlijn
+                        {t.myTimeline}
                       </Button>
                     </Link>
                     <Button variant="ghost" onClick={handleSignOut} className="w-full gap-2">
                       <LogOut className="w-4 h-4" />
-                      Uitloggen
+                      {t.logout}
                     </Button>
                   </>
                 ) : (
                   <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full">
-                      Inloggen
+                      {t.login}
                     </Button>
                   </Link>
                 )}
