@@ -75,59 +75,60 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
         setIsConnecting(false);
       });
 
-      // Use stream() method for more control over audio
-      const streams = await client.stream();
-      console.log('Received streams:', streams.length);
+      // Use the official streamToVideoElement method
+      await client.streamToVideoElement(VIDEO_ELEMENT_ID);
+      console.log('Streaming to video element started');
       
+      // Get video element and ensure audio is enabled
       const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
-      const audioElement = document.getElementById('anam-audio-element') as HTMLAudioElement;
       
-      if (streams.length > 0 && videoElement) {
-        // First stream is typically video, second is audio
-        const videoStream = streams[0];
-        videoElement.srcObject = videoStream;
-        videoElement.muted = true; // Mute video element to prevent echo
+      if (videoElement) {
+        // Wait a moment for stream to be attached
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Try to enable audio on the video element
+        videoElement.muted = false;
+        videoElement.volume = 1.0;
+        
+        console.log('Video element muted:', videoElement.muted);
+        console.log('Video element volume:', videoElement.volume);
+        console.log('Video element srcObject:', videoElement.srcObject);
+        
+        // Check for audio tracks
+        if (videoElement.srcObject instanceof MediaStream) {
+          const stream = videoElement.srcObject;
+          const audioTracks = stream.getAudioTracks();
+          console.log('Audio tracks count:', audioTracks.length);
+          audioTracks.forEach((track, i) => {
+            console.log(`Audio track ${i}:`, track.label, 'enabled:', track.enabled);
+            track.enabled = true;
+          });
+          
+          // Also create a Web Audio API context as backup
+          try {
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 1.0;
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            console.log('Web Audio API connected, state:', audioContext.state);
+            
+            // Resume if suspended
+            if (audioContext.state === 'suspended') {
+              await audioContext.resume();
+              console.log('Audio context resumed');
+            }
+          } catch (audioErr) {
+            console.log('Web Audio API error:', audioErr);
+          }
+        }
         
         try {
           await videoElement.play();
-          console.log('Video playing');
+          console.log('Video playing, paused:', videoElement.paused);
         } catch (playError) {
           console.log('Video autoplay blocked:', playError);
-        }
-      }
-      
-      if (streams.length > 1 && audioElement) {
-        // Second stream is audio
-        const audioStream = streams[1];
-        audioElement.srcObject = audioStream;
-        audioElement.muted = false;
-        audioElement.volume = 1.0;
-        
-        try {
-          await audioElement.play();
-          console.log('Audio playing');
-        } catch (playError) {
-          console.log('Audio autoplay blocked:', playError);
-        }
-      } else if (streams.length === 1 && audioElement) {
-        // If only one stream, it might contain both video and audio
-        // Try to extract audio from video stream
-        const combinedStream = streams[0];
-        const audioTracks = combinedStream.getAudioTracks();
-        console.log('Audio tracks in video stream:', audioTracks.length);
-        
-        if (audioTracks.length > 0) {
-          const audioOnlyStream = new MediaStream(audioTracks);
-          audioElement.srcObject = audioOnlyStream;
-          audioElement.muted = false;
-          audioElement.volume = 1.0;
-          
-          try {
-            await audioElement.play();
-            console.log('Audio from combined stream playing');
-          } catch (playError) {
-            console.log('Audio autoplay blocked:', playError);
-          }
         }
       }
     } catch (err) {
@@ -161,30 +162,27 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   }, [isMicMuted]);
 
   const toggleAudioMute = useCallback(() => {
-    const audioElement = document.getElementById('anam-audio-element') as HTMLAudioElement;
     const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
     
     const newMutedState = !isAudioMuted;
     
-    if (audioElement) {
-      audioElement.muted = newMutedState;
+    if (videoElement) {
+      videoElement.muted = newMutedState;
       if (!newMutedState) {
-        audioElement.volume = 1.0;
-        audioElement.play().catch(e => console.log('Audio play error:', e));
+        videoElement.volume = 1.0;
+      }
+      console.log('Video muted set to:', newMutedState);
+      
+      // Also toggle audio tracks
+      if (videoElement.srcObject instanceof MediaStream) {
+        const audioTracks = videoElement.srcObject.getAudioTracks();
+        audioTracks.forEach(track => {
+          track.enabled = !newMutedState;
+        });
       }
     }
     
-    // Also try video element for combined streams
-    if (videoElement && videoElement.srcObject) {
-      const stream = videoElement.srcObject as MediaStream;
-      const audioTracks = stream.getAudioTracks();
-      audioTracks.forEach(track => {
-        track.enabled = !newMutedState;
-      });
-    }
-    
     setIsAudioMuted(newMutedState);
-    console.log('Audio muted:', newMutedState);
   }, [isAudioMuted]);
 
   // Cleanup on unmount
@@ -250,9 +248,6 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
             !isConnected && "hidden"
           )}
         />
-
-        {/* Audio element for explicit audio playback */}
-        <audio id="anam-audio-element" autoPlay style={{ display: 'none' }} />
 
         {/* Controls overlay when connected */}
         {isConnected && (
