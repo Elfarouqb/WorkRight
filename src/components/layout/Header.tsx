@@ -1,67 +1,85 @@
-import { Shield, Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import logo from "@/assets/logo.svg";
+
+const navLinks = [
+  { href: "/rechtenverkenner", label: "Rechtenverkenner" },
+  { href: "/tijdlijn", label: "Tijdlijn" },
+  { href: "/termijnen", label: "Termijnen" },
+  { href: "/procesgids", label: "Procesgids" },
+];
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-18 items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-calm shadow-soft group-hover:shadow-glow transition-shadow">
-            <Shield className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-heading font-bold text-lg text-foreground">
-              WorkRight
-            </span>
-            <span className="text-xs text-muted-foreground -mt-0.5">
-              Navigator
-            </span>
-          </div>
-        </a>
+        <Link to="/" className="flex items-center group">
+          <img 
+            src={logo} 
+            alt="WorkRight Navigator" 
+            className="h-12 w-auto"
+          />
+        </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
-          <a
-            href="#how-it-works"
-            className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-          >
-            How It Works
-          </a>
-          <a
-            href="#features"
-            className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-          >
-            Features
-          </a>
-          <a
-            href="#deadlines"
-            className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-          >
-            Deadlines
-          </a>
+        <nav className="hidden lg:flex items-center gap-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted font-medium"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
           <AccessibilityToolbar />
-          <Button variant="hero" size="default">
-            Get Started
-          </Button>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Link to="/tijdlijn">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  Mijn tijdlijn
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Link to="/auth">
+              <Button variant="default" size="default">
+                Inloggen
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
+          className="lg:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-label={isMobileMenuOpen ? "Menu sluiten" : "Menu openen"}
         >
           {isMobileMenuOpen ? <X /> : <Menu />}
         </Button>
@@ -74,34 +92,41 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border bg-background"
+            className="lg:hidden border-t border-border bg-background"
           >
             <nav className="container py-4 flex flex-col gap-2">
-              <a
-                href="#how-it-works"
-                className="px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                How It Works
-              </a>
-              <a
-                href="#features"
-                className="px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Features
-              </a>
-              <a
-                href="#deadlines"
-                className="px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Deadlines
-              </a>
-              <div className="pt-2 border-t border-border mt-2">
-                <Button variant="hero" className="w-full">
-                  Get Started
-                </Button>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors font-medium"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-2 border-t border-border mt-2 flex flex-col gap-2">
+                <AccessibilityToolbar />
+                {user ? (
+                  <>
+                    <Link to="/tijdlijn" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full gap-2">
+                        <User className="w-4 h-4" />
+                        Mijn tijdlijn
+                      </Button>
+                    </Link>
+                    <Button variant="ghost" onClick={handleSignOut} className="w-full gap-2">
+                      <LogOut className="w-4 h-4" />
+                      Uitloggen
+                    </Button>
+                  </>
+                ) : (
+                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full">
+                      Inloggen
+                    </Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </motion.div>
