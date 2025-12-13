@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, VideoOff, Mic, MicOff } from 'lucide-react';
+import { Loader2, Video, VideoOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,8 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startSession = useCallback(async () => {
@@ -76,6 +77,18 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
 
       // Start streaming to video element by ID
       await client.streamToVideoElement(VIDEO_ELEMENT_ID);
+      
+      // Ensure audio plays after user interaction
+      const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
+      if (videoElement) {
+        videoElement.muted = false;
+        videoElement.volume = 1.0;
+        try {
+          await videoElement.play();
+        } catch (playError) {
+          console.log('Autoplay with audio blocked, user interaction needed');
+        }
+      }
     } catch (err) {
       console.error('Failed to start Anam session:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect');
@@ -95,16 +108,24 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
     setIsConnected(false);
   }, []);
 
-  const toggleMute = useCallback(() => {
+  const toggleMicMute = useCallback(() => {
     if (anamClientRef.current) {
-      if (isMuted) {
+      if (isMicMuted) {
         anamClientRef.current.unmuteInputAudio();
       } else {
         anamClientRef.current.muteInputAudio();
       }
-      setIsMuted(!isMuted);
+      setIsMicMuted(!isMicMuted);
     }
-  }, [isMuted]);
+  }, [isMicMuted]);
+
+  const toggleAudioMute = useCallback(() => {
+    const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
+    if (videoElement) {
+      videoElement.muted = !isAudioMuted;
+      setIsAudioMuted(!isAudioMuted);
+    }
+  }, [isAudioMuted]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -163,11 +184,15 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           id={VIDEO_ELEMENT_ID}
           autoPlay
           playsInline
+          muted={false}
           className={cn(
             "w-full h-full object-cover",
             !isConnected && "hidden"
           )}
         />
+
+        {/* Audio element for explicit audio playback */}
+        <audio id="anam-audio-element" autoPlay style={{ display: 'none' }} />
 
         {/* Controls overlay when connected */}
         {isConnected && (
@@ -178,17 +203,28 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           >
             <Button
               size="icon"
-              variant={isMuted ? "destructive" : "secondary"}
-              onClick={toggleMute}
+              variant={isAudioMuted ? "destructive" : "secondary"}
+              onClick={toggleAudioMute}
               className="rounded-full h-10 w-10"
+              title={isAudioMuted ? "Geluid aan" : "Geluid uit"}
             >
-              {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isAudioMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+            <Button
+              size="icon"
+              variant={isMicMuted ? "destructive" : "secondary"}
+              onClick={toggleMicMute}
+              className="rounded-full h-10 w-10"
+              title={isMicMuted ? "Microfoon aan" : "Microfoon uit"}
+            >
+              {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
             <Button
               size="icon"
               variant="destructive"
               onClick={endSession}
               className="rounded-full h-10 w-10"
+              title="Gesprek beëindigen"
             >
               <VideoOff className="h-4 w-4" />
             </Button>
