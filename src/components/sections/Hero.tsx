@@ -57,9 +57,9 @@ export function Hero() {
                 >
                   <Button size="lg" className="gap-3 text-lg font-semibold px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-shadow">
                     <MessageCircle className="w-6 h-6" />
-                    Vraag hulp
+                    Get help
                     <span className="text-primary-foreground/70 text-sm ml-2">
-                      (spraak of tekst)
+                      (voice or text)
                     </span>
                   </Button>
                 </motion.div>
