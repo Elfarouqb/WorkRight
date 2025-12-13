@@ -123,15 +123,18 @@ function calculateDeadlines(dismissalDate: string) {
 async function executeToolCall(toolName: string, args: any, userId?: string) {
   const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
   
-  console.log(`Executing tool: ${toolName}`, args);
+  console.log(`Executing tool: ${toolName}`, args, 'userId:', userId);
   
   if (toolName === 'save_dismissal_info') {
     const deadlines = calculateDeadlines(args.dismissal_date);
+    let savedToDb = false;
     
     // If we have a userId, save to database
     if (userId) {
+      console.log('Saving to database for user:', userId);
+      
       // Save timeline event
-      await supabase.from('timeline_events').insert({
+      const { error: timelineError } = await supabase.from('timeline_events').insert({
         user_id: userId,
         title: 'Ontslag',
         description: args.reason || 'Ontslagdatum geregistreerd via spraakassistent',
@@ -139,19 +142,39 @@ async function executeToolCall(toolName: string, args: any, userId?: string) {
         event_type: 'ontslag'
       });
       
+      if (timelineError) {
+        console.error('Error saving timeline event:', timelineError);
+      } else {
+        console.log('Timeline event saved successfully');
+        savedToDb = true;
+      }
+      
       // Save deadline
-      await supabase.from('user_deadlines').insert({
+      const { error: deadlineError } = await supabase.from('user_deadlines').insert({
         user_id: userId,
         dismissal_date: args.dismissal_date,
         deadline_type: 'bezwaar_uwv',
         notes: 'Automatisch aangemaakt via spraakassistent'
       });
+      
+      if (deadlineError) {
+        console.error('Error saving deadline:', deadlineError);
+      } else {
+        console.log('Deadline saved successfully');
+      }
+    } else {
+      console.log('No userId provided, data not saved to database');
     }
+    
+    const saveMessage = savedToDb 
+      ? `Ik heb je ontslagdatum van ${args.dismissal_date} opgeslagen in je tijdlijn. `
+      : `Op basis van je ontslagdatum (${args.dismissal_date}) zijn hier de belangrijke termijnen. Log in om dit op te slaan. `;
     
     return {
       success: true,
-      message: `Ik heb je ontslagdatum van ${args.dismissal_date} opgeslagen. `,
+      message: saveMessage,
       deadlines,
+      savedToDb,
       info: `
 Belangrijke termijnen:
 • Bezwaar bij UWV: uiterlijk ${deadlines.bezwaar_uwv}
