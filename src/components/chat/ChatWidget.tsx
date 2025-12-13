@@ -6,10 +6,10 @@ import { useChat } from '@/hooks/useChat';
 import { cn } from '@/lib/utils';
 
 const suggestedQuestions = [
-  "I was let go and I'm not sure why",
-  "What counts as discrimination?",
-  "How much time do I have?",
-  "What is ACAS?",
+  "Ik ben ontslagen en weet niet waarom",
+  "Wat telt als discriminatie?",
+  "Hoeveel tijd heb ik?",
+  "Wat doet Het Juridisch Loket?",
 ];
 
 export const ChatWidget = () => {
@@ -110,10 +110,10 @@ export const ChatWidget = () => {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
               <div>
                 <h3 className="font-heading font-semibold text-foreground">
-                  Rights Assistant
+                  Rechten Assistent
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Here to help, not to judge
+                  Hier om te helpen, niet te oordelen
                 </p>
               </div>
               <Button
@@ -140,10 +140,10 @@ export const ChatWidget = () => {
                       </div>
                       <div className="space-y-2">
                         <p className="text-foreground text-sm leading-relaxed">
-                          Hello. I'm here to help you understand what happened at work. Take your time - there's no rush.
+                          Hallo. Ik ben hier om je te helpen begrijpen wat er op je werk is gebeurd. Neem je tijd - er is geen haast.
                         </p>
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                          You can ask me anything. I won't judge, and everything you share stays private.
+                          Je kunt me alles vragen. Ik oordeel niet, en alles wat je deelt blijft privé.
                         </p>
                       </div>
                     </div>
@@ -152,7 +152,7 @@ export const ChatWidget = () => {
                   {/* Suggested questions */}
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground text-center">
-                      Not sure where to start? Try one of these:
+                      Weet je niet waar je moet beginnen? Probeer een van deze:
                     </p>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {suggestedQuestions.map((question, i) => (
@@ -221,7 +221,7 @@ export const ChatWidget = () => {
                   className="bg-destructive/10 rounded-xl p-4 text-center"
                 >
                   <p className="text-foreground text-sm mb-2">
-                    Something went wrong, but that's okay. These things happen.
+                    Er ging iets mis, maar dat geeft niet. Dit kan gebeuren.
                   </p>
                   <Button
                     variant="outline"
@@ -229,7 +229,7 @@ export const ChatWidget = () => {
                     onClick={() => sendMessage(messages[messages.length - 1]?.content || '')}
                     className="text-sm"
                   >
-                    Try again
+                    Probeer opnieuw
                   </Button>
                 </motion.div>
               )}
@@ -245,7 +245,7 @@ export const ChatWidget = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="What's on your mind?"
+                  placeholder="Wat houdt je bezig?"
                   className={cn(
                     "flex-1 resize-none rounded-xl px-4 py-3",
                     "bg-muted text-foreground placeholder:text-muted-foreground",
@@ -254,7 +254,7 @@ export const ChatWidget = () => {
                   )}
                   rows={1}
                   disabled={isLoading}
-                  aria-label="Type your question or describe what happened"
+                  aria-label="Typ je vraag of beschrijf wat er is gebeurd"
                 />
                 <Button
                   type="submit"
@@ -271,7 +271,7 @@ export const ChatWidget = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                I'm here to help you understand - not to give legal advice.
+                Ik help je te begrijpen - dit is geen juridisch advies.
               </p>
             </form>
           </motion.div>
