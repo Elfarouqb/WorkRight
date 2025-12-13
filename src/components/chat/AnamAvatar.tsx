@@ -75,18 +75,59 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
         setIsConnecting(false);
       });
 
-      // Start streaming to video element by ID
-      await client.streamToVideoElement(VIDEO_ELEMENT_ID);
+      // Use stream() method for more control over audio
+      const streams = await client.stream();
+      console.log('Received streams:', streams.length);
       
-      // Ensure audio plays after user interaction
       const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
-      if (videoElement) {
-        videoElement.muted = false;
-        videoElement.volume = 1.0;
+      const audioElement = document.getElementById('anam-audio-element') as HTMLAudioElement;
+      
+      if (streams.length > 0 && videoElement) {
+        // First stream is typically video, second is audio
+        const videoStream = streams[0];
+        videoElement.srcObject = videoStream;
+        videoElement.muted = true; // Mute video element to prevent echo
+        
         try {
           await videoElement.play();
+          console.log('Video playing');
         } catch (playError) {
-          console.log('Autoplay with audio blocked, user interaction needed');
+          console.log('Video autoplay blocked:', playError);
+        }
+      }
+      
+      if (streams.length > 1 && audioElement) {
+        // Second stream is audio
+        const audioStream = streams[1];
+        audioElement.srcObject = audioStream;
+        audioElement.muted = false;
+        audioElement.volume = 1.0;
+        
+        try {
+          await audioElement.play();
+          console.log('Audio playing');
+        } catch (playError) {
+          console.log('Audio autoplay blocked:', playError);
+        }
+      } else if (streams.length === 1 && audioElement) {
+        // If only one stream, it might contain both video and audio
+        // Try to extract audio from video stream
+        const combinedStream = streams[0];
+        const audioTracks = combinedStream.getAudioTracks();
+        console.log('Audio tracks in video stream:', audioTracks.length);
+        
+        if (audioTracks.length > 0) {
+          const audioOnlyStream = new MediaStream(audioTracks);
+          audioElement.srcObject = audioOnlyStream;
+          audioElement.muted = false;
+          audioElement.volume = 1.0;
+          
+          try {
+            await audioElement.play();
+            console.log('Audio from combined stream playing');
+          } catch (playError) {
+            console.log('Audio autoplay blocked:', playError);
+          }
         }
       }
     } catch (err) {
@@ -120,11 +161,30 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   }, [isMicMuted]);
 
   const toggleAudioMute = useCallback(() => {
+    const audioElement = document.getElementById('anam-audio-element') as HTMLAudioElement;
     const videoElement = document.getElementById(VIDEO_ELEMENT_ID) as HTMLVideoElement;
-    if (videoElement) {
-      videoElement.muted = !isAudioMuted;
-      setIsAudioMuted(!isAudioMuted);
+    
+    const newMutedState = !isAudioMuted;
+    
+    if (audioElement) {
+      audioElement.muted = newMutedState;
+      if (!newMutedState) {
+        audioElement.volume = 1.0;
+        audioElement.play().catch(e => console.log('Audio play error:', e));
+      }
     }
+    
+    // Also try video element for combined streams
+    if (videoElement && videoElement.srcObject) {
+      const stream = videoElement.srcObject as MediaStream;
+      const audioTracks = stream.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = !newMutedState;
+      });
+    }
+    
+    setIsAudioMuted(newMutedState);
+    console.log('Audio muted:', newMutedState);
   }, [isAudioMuted]);
 
   // Cleanup on unmount
