@@ -6,6 +6,7 @@ import { Features } from "@/components/sections/Features";
 import { DeadlineAlert } from "@/components/sections/DeadlineAlert";
 import { Reassurance } from "@/components/sections/Reassurance";
 import { ProtectedCharacteristics } from "@/components/sections/ProtectedCharacteristics";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
         <Reassurance />
       </main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 };
