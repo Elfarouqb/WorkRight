@@ -1,38 +1,41 @@
 import { motion } from "framer-motion";
-
-const steps = [
-  {
-    step: 1,
-    title: "Verken je situatie",
-    description: "Beantwoord vragen over wat er is gebeurd. Geen juridische taal, gewoon simpele vragen.",
-  },
-  {
-    step: 2,
-    title: "Documenteer alles",
-    description: "Bouw een tijdlijn van gebeurtenissen. Dit helpt bij gesprekken met adviseurs.",
-  },
-  {
-    step: 3,
-    title: "Begrijp je opties",
-    description: "Leer welke stappen je kunt zetten en welke termijnen belangrijk zijn.",
-  },
-  {
-    step: 4,
-    title: "Zoek hulp",
-    description: "Neem contact op met Het Juridisch Loket of andere hulpbronnen met een duidelijk verhaal.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ProcessSteps() {
+  const { t } = useLanguage();
+
+  const steps = [
+    {
+      step: 1,
+      title: t.step1Title,
+      description: t.step1Desc,
+    },
+    {
+      step: 2,
+      title: t.step2Title,
+      description: t.step2Desc,
+    },
+    {
+      step: 3,
+      title: t.step3Title,
+      description: t.step3Desc,
+    },
+    {
+      step: 4,
+      title: t.step4Title,
+      description: t.step4Desc,
+    },
+  ];
+
   return (
     <section id="how-it-works" className="py-16 md:py-24">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-display-sm font-heading font-bold text-foreground mb-4">
-            Hoe het werkt
+            {t.howItWorks}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stap voor stap naar duidelijkheid. Op je eigen tempo.
+            {t.stepByStep}
           </p>
         </div>
 

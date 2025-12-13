@@ -1,32 +1,6 @@
 import { Shield, Users, Lock, Heart } from "lucide-react";
 import { motion } from "framer-motion";
-
-const points = [
-  {
-    icon: Shield,
-    title: "We support, not replace",
-    description:
-      "This tool helps you understand and prepare. It does not replace legal advice. Always speak to a professional before making decisions.",
-  },
-  {
-    icon: Users,
-    title: "Human help is available",
-    description:
-      "ACAS, Citizens Advice, and employment solicitors can provide the expert support you need. We'll point you in the right direction.",
-  },
-  {
-    icon: Lock,
-    title: "Your privacy matters",
-    description:
-      "We don't store your personal information. What you share stays with you. You're in control.",
-  },
-  {
-    icon: Heart,
-    title: "You're not alone",
-    description:
-      "Many people go through this. It's okay to feel overwhelmed. Take breaks. Come back when you're ready.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const container = {
   hidden: { opacity: 0 },
@@ -44,6 +18,31 @@ const item = {
 };
 
 export function Reassurance() {
+  const { t } = useLanguage();
+
+  const points = [
+    {
+      icon: Shield,
+      title: t.supportNotReplace,
+      description: t.supportNotReplaceDesc,
+    },
+    {
+      icon: Users,
+      title: t.humanHelpAvailable,
+      description: t.humanHelpAvailableDesc,
+    },
+    {
+      icon: Lock,
+      title: t.privacyMatters,
+      description: t.privacyMattersDesc,
+    },
+    {
+      icon: Heart,
+      title: t.notAlone,
+      description: t.notAloneDesc,
+    },
+  ];
+
   return (
     <section className="py-20 md:py-28 bg-muted/30">
       <div className="container">
@@ -55,7 +54,7 @@ export function Reassurance() {
             viewport={{ once: true }}
             className="inline-block text-sm font-semibold text-primary mb-3"
           >
-            OUR PROMISE
+            {t.ourPromise}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -64,7 +63,7 @@ export function Reassurance() {
             transition={{ delay: 0.1 }}
             className="text-display-sm font-heading mb-4"
           >
-            Here to help, not to overwhelm
+            {t.hereToHelp}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -73,8 +72,7 @@ export function Reassurance() {
             transition={{ delay: 0.2 }}
             className="text-accessible text-muted-foreground"
           >
-            We understand this is a difficult time. We've designed this tool 
-            with care, keeping your wellbeing in mind.
+            {t.hereToHelpDesc}
           </motion.p>
         </div>
 
