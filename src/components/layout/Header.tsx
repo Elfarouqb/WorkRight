@@ -2,6 +2,7 @@ import { Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,9 +49,7 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm">
-            Accessibility
-          </Button>
+          <AccessibilityToolbar />
           <Button variant="hero" size="default">
             Get Started
           </Button>
