@@ -126,18 +126,17 @@ export const useVoiceAssistant = () => {
       const assistantMessage: Message = { role: 'assistant', content: assistantText };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Start speaking in parallel with navigation prep
-      const speakPromise = speakText(assistantText);
+      // Processing is done, now speaking
+      setIsProcessing(false);
       
-      // Navigate while speaking if needed (with shorter delay)
+      // Start speaking
+      await speakText(assistantText);
+      
+      // Navigate after speaking if needed
       if (navigateTo) {
         console.log('Navigating to:', navigateTo);
-        setTimeout(() => {
-          navigate(navigateTo);
-        }, 300);
+        navigate(navigateTo);
       }
-      
-      await speakPromise;
       
     } catch (err) {
       console.error('Error processing audio:', err);
@@ -148,7 +147,6 @@ export const useVoiceAssistant = () => {
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
       setIsProcessing(false);
     }
   };
