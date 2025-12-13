@@ -1,37 +1,7 @@
 import { motion } from "framer-motion";
 import { Search, FileText, Calculator, BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const features = [
-  {
-    icon: Search,
-    title: "Rechtenverkenner",
-    description: "Beantwoord eenvoudige vragen en ontdek of wat jou is overkomen discriminatie kan zijn.",
-    href: "/rechtenverkenner",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: FileText,
-    title: "Tijdlijnbouwer",
-    description: "Documenteer gebeurtenissen stap voor stap. Handig voor gesprekken met adviseurs.",
-    href: "/tijdlijn",
-    color: "bg-accent/20 text-accent-foreground",
-  },
-  {
-    icon: Calculator,
-    title: "Termijnberekener",
-    description: "Bereken belangrijke deadlines en vergeet nooit een termijn.",
-    href: "/termijnen",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: BookOpen,
-    title: "Procesgids",
-    description: "Begrijp hoe het Nederlandse systeem werkt, met links naar hulpbronnen.",
-    href: "/procesgids",
-    color: "bg-accent/20 text-accent-foreground",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const container = {
   hidden: { opacity: 0 },
@@ -47,15 +17,48 @@ const item = {
 };
 
 export function Features() {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Search,
+      title: t("features.explorer.title"),
+      description: t("features.explorer.desc"),
+      href: "/rechtenverkenner",
+      color: "bg-primary/10 text-primary",
+    },
+    {
+      icon: FileText,
+      title: t("features.timeline.title"),
+      description: t("features.timeline.desc"),
+      href: "/tijdlijn",
+      color: "bg-accent/20 text-accent-foreground",
+    },
+    {
+      icon: Calculator,
+      title: t("features.deadline.title"),
+      description: t("features.deadline.desc"),
+      href: "/termijnen",
+      color: "bg-primary/10 text-primary",
+    },
+    {
+      icon: BookOpen,
+      title: t("features.guide.title"),
+      description: t("features.guide.desc"),
+      href: "/procesgids",
+      color: "bg-accent/20 text-accent-foreground",
+    },
+  ];
+
   return (
     <section id="features" className="py-16 md:py-24 bg-muted/30">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-display-sm font-heading font-bold text-foreground mb-4">
-            Tools die je helpen
+            {t("features.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Alles wat je nodig hebt om je situatie te begrijpen en je voor te bereiden.
+            {t("features.subtitle")}
           </p>
         </div>
 
@@ -69,7 +72,7 @@ export function Features() {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <motion.div key={feature.title} variants={item}>
+              <motion.div key={feature.href} variants={item}>
                 <Link
                   to={feature.href}
                   className="block h-full p-6 rounded-2xl bg-card border border-border/50 shadow-soft hover:shadow-card hover:border-primary/30 transition-all group"
@@ -86,7 +89,7 @@ export function Features() {
                         {feature.description}
                       </p>
                       <div className="mt-4 inline-flex items-center gap-1 text-primary font-medium text-sm">
-                        Bekijken
+                        {t("features.view")}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
