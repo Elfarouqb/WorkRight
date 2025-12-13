@@ -146,15 +146,25 @@ export const useVoiceAssistant = () => {
       if (chatError) throw new Error(chatError.message);
       
       const assistantText = chatData?.text || 'Sorry, ik begreep dat niet.';
-      const navigateTo = chatData?.navigate;
+      let navigateTo = chatData?.navigate;
       const toolResults = chatData?.toolResults;
       
-      // Show toast if actions were executed
+      // Check for navigation in tool results
       if (toolResults && toolResults.length > 0) {
-        toast({
-          title: 'Actie uitgevoerd',
-          description: 'Gegevens zijn opgeslagen in je tijdlijn.',
-        });
+        for (const result of toolResults) {
+          if (result.navigate) {
+            navigateTo = result.navigate;
+          }
+        }
+        
+        // Show appropriate toast based on action
+        const savedAction = toolResults.find((r: any) => r.savedToDb === true);
+        if (savedAction) {
+          toast({
+            title: 'Opgeslagen',
+            description: 'Gegevens zijn opgeslagen in je account.',
+          });
+        }
       }
       
       // Add assistant message immediately - don't wait for speech
