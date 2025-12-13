@@ -26,11 +26,18 @@ export const useVoiceAssistant = () => {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
+      console.log('Voice assistant user:', user?.id);
+      setUserId(user?.id ?? null);
     };
     getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      console.log('Auth state changed, user:', session?.user?.id);
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const startListening = useCallback(async () => {
