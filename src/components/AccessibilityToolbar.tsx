@@ -5,10 +5,20 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
-import { Accessibility, Type, ZoomIn, Check } from "lucide-react";
+import { Accessibility, Type, ZoomIn, Check, Volume2, VolumeX, Play, Square } from "lucide-react";
 
 export function AccessibilityToolbar() {
-  const { fontMode, setFontMode, textSize, setTextSize } = useAccessibility();
+  const { 
+    fontMode, 
+    setFontMode, 
+    textSize, 
+    setTextSize,
+    narratorEnabled,
+    setNarratorEnabled,
+    isNarrating,
+    startNarrating,
+    stopNarrating
+  } = useAccessibility();
 
   return (
     <Popover>
@@ -25,7 +35,62 @@ export function AccessibilityToolbar() {
       </PopoverTrigger>
       <PopoverContent className="w-72" align="end">
         <div className="space-y-4">
+          {/* Narrator Mode */}
           <div className="space-y-2">
+            <h4 className="font-heading font-bold text-sm flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-primary" />
+              Narrator Mode
+            </h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              Let the page content be read aloud to you
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setNarratorEnabled(!narratorEnabled)}
+                className={`flex-1 py-2 px-3 rounded-lg border text-center transition-all flex items-center justify-center gap-2 ${
+                  narratorEnabled
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                {narratorEnabled ? (
+                  <>
+                    <Volume2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Enabled</span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="h-4 w-4" />
+                    <span className="text-sm font-medium">Disabled</span>
+                  </>
+                )}
+              </button>
+              {narratorEnabled && (
+                <button
+                  onClick={isNarrating ? stopNarrating : startNarrating}
+                  className={`py-2 px-4 rounded-lg border transition-all flex items-center gap-2 ${
+                    isNarrating
+                      ? "border-destructive bg-destructive/10 text-destructive"
+                      : "border-primary bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {isNarrating ? (
+                    <>
+                      <Square className="h-4 w-4" />
+                      <span className="text-sm font-medium">Stop</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      <span className="text-sm font-medium">Play</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4 space-y-2">
             <h4 className="font-heading font-bold text-sm flex items-center gap-2">
               <Type className="h-4 w-4 text-primary" />
               Reading Font
