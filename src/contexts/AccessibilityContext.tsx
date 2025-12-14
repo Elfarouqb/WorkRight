@@ -143,15 +143,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   // Get the best voice for the current language
   const getVoiceForLanguage = useCallback((voices: SpeechSynthesisVoice[], lang: string) => {
     const langCode = lang === "nl" ? "nl" : "en";
-    const fullLangCode = lang === "nl" ? "nl-NL" : "en";
     
-    // Common female voice name patterns
+    // Female voice names (be specific to avoid matching male names)
     const femaleNames = [
-      "female", "vrouw", "anna", "ellen", "sara", "claire", "flo", "xander",
-      "google", "samantha", "victoria", "karen", "moira", "tessa", "ava",
-      "allison", "susan", "zira", "hazel", "heera", "linda", "nicky",
-      "microsoft", "google uk", "google us"
+      "zira", "sara", "anna", "ellen", "claire", "flo", "linda",
+      "samantha", "victoria", "karen", "moira", "tessa", "ava",
+      "allison", "susan", "hazel", "heera", "nicky", "female",
+      "vrouw", "eva", "lotte", "merel", "ilse"
     ];
+    
+    // Male names to explicitly exclude
+    const maleNames = ["david", "mark", "james", "george", "daniel", "richard", "guy"];
     
     // Filter voices for the language
     const langVoices = voices.filter(v => 
@@ -161,14 +163,28 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     
     console.log(`Available ${langCode} voices:`, langVoices.map(v => `${v.name} (${v.lang})`));
     
-    // Try to find a female voice
-    const femaleVoice = langVoices.find(v => 
-      femaleNames.some(name => v.name.toLowerCase().includes(name))
-    );
+    // Try to find a female voice (must match female name AND not match male name)
+    const femaleVoice = langVoices.find(v => {
+      const nameLower = v.name.toLowerCase();
+      const isFemale = femaleNames.some(name => nameLower.includes(name));
+      const isMale = maleNames.some(name => nameLower.includes(name));
+      return isFemale && !isMale;
+    });
     
     if (femaleVoice) {
       console.log(`Selected female voice: ${femaleVoice.name}`);
       return femaleVoice;
+    }
+    
+    // If no specific female voice, try to find any non-male voice
+    const nonMaleVoice = langVoices.find(v => {
+      const nameLower = v.name.toLowerCase();
+      return !maleNames.some(name => nameLower.includes(name));
+    });
+    
+    if (nonMaleVoice) {
+      console.log(`Selected non-male voice: ${nonMaleVoice.name}`);
+      return nonMaleVoice;
     }
     
     // Fall back to first available voice for the language
@@ -177,7 +193,25 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       return langVoices[0];
     }
     
-    // Last resort: any voice
+    // If no voice for this language, try English as fallback for Dutch
+    if (langCode === "nl") {
+      console.log(`No Dutch voice found, trying English fallback`);
+      const enVoices = voices.filter(v => v.lang.toLowerCase().startsWith("en"));
+      const enFemaleVoice = enVoices.find(v => {
+        const nameLower = v.name.toLowerCase();
+        const isFemale = femaleNames.some(name => nameLower.includes(name));
+        const isMale = maleNames.some(name => nameLower.includes(name));
+        return isFemale && !isMale;
+      });
+      if (enFemaleVoice) {
+        console.log(`Using English female voice as fallback: ${enFemaleVoice.name}`);
+        return enFemaleVoice;
+      }
+      if (enVoices.length > 0) {
+        return enVoices[0];
+      }
+    }
+    
     console.log(`No ${langCode} voice found, using default`);
     return null;
   }, []);
