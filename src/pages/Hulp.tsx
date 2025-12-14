@@ -8,18 +8,21 @@ import { useChat } from '@/hooks/useChat';
 import { useSendTranscript } from '@/hooks/useSendTranscript';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AiAvatar } from '@/components/chat/AiAvatar';
 import { AnamAvatar } from '@/components/chat/AnamAvatar';
 import { cn } from '@/lib/utils';
 
-const suggestedQuestions = [
-  "Ik ben ontslagen en weet niet waarom",
-  "Wat telt als discriminatie?",
-  "Hoeveel tijd heb ik?",
-  "Wat doet Het Juridisch Loket?",
-];
-
 const Hulp = () => {
+  const { t } = useLanguage();
+  
+  const suggestedQuestions = [
+    t.hulpQ1,
+    t.hulpQ2,
+    t.hulpQ3,
+    t.hulpQ4,
+  ];
+
   // Text chat state
   const [input, setInput] = useState('');
   const { messages: chatMessages, isLoading, error: chatError, sendMessage, clearMessages: clearChatMessages } = useChat();
@@ -27,6 +30,7 @@ const Hulp = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
   // Transcript state
@@ -35,11 +39,11 @@ const Hulp = () => {
   const [guestEmail, setGuestEmail] = useState('');
   const messagesCountRef = useRef(0);
 
+  // Scroll only within the chat container, not the whole page
   const scrollToBottom = useCallback(() => {
-    // Use setTimeout to ensure DOM is updated before scrolling
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, []);
 
   // Scroll when messages change OR when loading state changes
@@ -166,10 +170,10 @@ const Hulp = () => {
         {/* Page Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-2">
-            Hulp & Ondersteuning
+            {t.hulpTitle}
           </h1>
           <p className="text-muted-foreground">
-            Kies hoe je hulp wilt krijgen: video of tekst
+            {t.hulpSubtitle}
           </p>
         </div>
 
@@ -182,7 +186,7 @@ const Hulp = () => {
               <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary" />
-                  <span className="font-heading font-semibold text-foreground">Video Assistent</span>
+                  <span className="font-heading font-semibold text-foreground">{t.hulpVideoAssistant}</span>
                 </div>
               </div>
 
@@ -206,9 +210,9 @@ const Hulp = () => {
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-primary" />
                   <div>
-                    <span className="font-heading font-semibold text-foreground">Tekst Chat</span>
+                    <span className="font-heading font-semibold text-foreground">{t.hulpTextChat}</span>
                     <p className="text-xs text-muted-foreground">
-                      Hier om te helpen, niet te oordelen
+                      {t.hulpChatSubtitle}
                     </p>
                   </div>
                 </div>
@@ -225,7 +229,7 @@ const Hulp = () => {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 {chatMessages.length === 0 && (
                   <div className="py-4 space-y-4">
                     {/* Welcome message */}
@@ -234,10 +238,10 @@ const Hulp = () => {
                         <AiAvatar size="sm" className="shrink-0" />
                         <div className="space-y-2">
                           <p className="text-foreground text-sm leading-relaxed">
-                            <span className="font-semibold">Hoi, ik ben Mira.</span> Ik ben hier om je te helpen begrijpen wat er op je werk is gebeurd. Neem je tijd - er is geen haast.
+                            <span className="font-semibold">{t.hulpWelcome}</span> {t.hulpWelcomeDesc}
                           </p>
                           <p className="text-muted-foreground text-sm leading-relaxed">
-                            Je kunt me alles vragen. Ik oordeel niet, en alles wat je deelt blijft privé.
+                            {t.hulpChatSubtitle}
                           </p>
                         </div>
                       </div>
@@ -246,7 +250,7 @@ const Hulp = () => {
                     {/* Suggested questions */}
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground text-center">
-                        Weet je niet waar je moet beginnen? Probeer een van deze:
+                        {t.hulpSuggestionIntro}
                       </p>
                       <div className="flex flex-wrap gap-2 justify-center">
                         {suggestedQuestions.map((question, i) => (
@@ -309,7 +313,7 @@ const Hulp = () => {
                   >
                     <AiAvatar isProcessing size="sm" className="shrink-0 mt-1" />
                     <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Even denken...</span>
+                      <span className="text-sm text-muted-foreground">{t.hulpThinking}</span>
                     </div>
                   </motion.div>
                 )}
@@ -321,7 +325,7 @@ const Hulp = () => {
                     className="bg-destructive/10 rounded-xl p-4 text-center"
                   >
                     <p className="text-foreground text-sm mb-2">
-                      Er ging iets mis, maar dat geeft niet. Dit kan gebeuren.
+                      {t.hulpErrorMessage}
                     </p>
                     <Button
                       variant="outline"
@@ -329,7 +333,7 @@ const Hulp = () => {
                       onClick={() => sendMessage(chatMessages[chatMessages.length - 1]?.content || '')}
                       className="text-sm"
                     >
-                      Probeer opnieuw
+                      {t.hulpTryAgain}
                     </Button>
                   </motion.div>
                 )}
@@ -345,7 +349,7 @@ const Hulp = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Wat houdt je bezig?"
+                    placeholder={t.hulpInputPlaceholder}
                     className={cn(
                       "flex-1 resize-none rounded-xl px-4 py-3",
                       "bg-muted text-foreground placeholder:text-muted-foreground",
@@ -354,7 +358,7 @@ const Hulp = () => {
                     )}
                     rows={1}
                     disabled={isLoading}
-                    aria-label="Typ je vraag of beschrijf wat er is gebeurd"
+                    aria-label={t.hulpInputPlaceholder}
                   />
                   <Button
                     type="submit"
@@ -380,18 +384,17 @@ const Hulp = () => {
           {/* Legal Disclaimer */}
           <div className="bg-muted/50 border border-border rounded-xl p-4">
             <p className="text-sm text-foreground font-medium mb-2">
-              ⚠️ Dit is informatie, geen juridisch advies
+              {t.hulpDisclaimerTitle}
             </p>
             <p className="text-xs text-muted-foreground">
-              Alles wat we bespreken is bedoeld om je te helpen begrijpen. Het is geen vervanging voor professioneel advies. 
-              Laat belangrijke beslissingen altijd controleren door een adviseur.
+              {t.hulpDisclaimerDesc}
             </p>
           </div>
 
           {/* Human Signposting */}
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
             <p className="text-sm text-foreground font-medium mb-3">
-              📞 Praat met een echte adviseur
+              {t.hulpHumanTitle}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <a 
@@ -429,7 +432,7 @@ const Hulp = () => {
 
           {/* Privacy Note */}
           <p className="text-center text-xs text-muted-foreground">
-            Je privacy is belangrijk. Alles wat je deelt blijft vertrouwelijk en wordt alleen gebruikt om je te helpen.
+            {t.hulpPrivacyNote}
           </p>
         </div>
       </main>
@@ -458,13 +461,13 @@ const Hulp = () => {
                   <Mail className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
-                  <p className="text-xs text-muted-foreground">Per e-mail, helemaal gratis</p>
+                  <h3 className="font-semibold text-foreground">{t.hulpSummaryTitle}</h3>
+                  <p className="text-xs text-muted-foreground">{t.hulpSummaryQuestion}</p>
                 </div>
               </div>
 
               <p className="text-sm text-muted-foreground">
-                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+                {t.hulpSummaryDesc}
               </p>
 
               <div className="space-y-3">
@@ -472,7 +475,7 @@ const Hulp = () => {
                   type="email"
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
-                  placeholder="je@email.nl"
+                  placeholder={t.hulpEmailPlaceholder}
                   className={cn(
                     "w-full rounded-xl px-4 py-3 text-sm",
                     "bg-muted text-foreground placeholder:text-muted-foreground",
@@ -492,7 +495,7 @@ const Hulp = () => {
                     className="flex-1"
                     onClick={handleSkipEmail}
                   >
-                    Nee, bedankt
+                    {t.hulpNoThanks}
                   </Button>
                   <Button
                     className="flex-1"
@@ -502,7 +505,7 @@ const Hulp = () => {
                     {isSendingTranscript ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      'Verstuur'
+                      t.hulpSend
                     )}
                   </Button>
                 </div>
