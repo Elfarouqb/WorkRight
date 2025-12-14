@@ -141,25 +141,46 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   }, [clearHighlight]);
 
   // Get the best voice for the current language
-  const getVoiceForLanguage = useCallback((voices: SpeechSynthesisVoice[]) => {
-    const langCode = narratorLanguage === "nl" ? "nl" : "en";
+  const getVoiceForLanguage = useCallback((voices: SpeechSynthesisVoice[], lang: string) => {
+    const langCode = lang === "nl" ? "nl" : "en";
+    const fullLangCode = lang === "nl" ? "nl-NL" : "en";
     
-    // Try to find a female voice first for a friendlier tone
-    const femaleVoice = voices.find(v => 
-      v.lang.startsWith(langCode) && 
-      (v.name.toLowerCase().includes("female") || 
-       v.name.toLowerCase().includes("vrouw") ||
-       v.name.toLowerCase().includes("anna") ||
-       v.name.toLowerCase().includes("ellen") ||
-       v.name.toLowerCase().includes("sara") ||
-       v.name.toLowerCase().includes("claire"))
+    // Common female voice name patterns
+    const femaleNames = [
+      "female", "vrouw", "anna", "ellen", "sara", "claire", "flo", "xander",
+      "google", "samantha", "victoria", "karen", "moira", "tessa", "ava",
+      "allison", "susan", "zira", "hazel", "heera", "linda", "nicky",
+      "microsoft", "google uk", "google us"
+    ];
+    
+    // Filter voices for the language
+    const langVoices = voices.filter(v => 
+      v.lang.toLowerCase().startsWith(langCode) || 
+      v.lang.toLowerCase().includes(langCode)
     );
     
-    if (femaleVoice) return femaleVoice;
+    console.log(`Available ${langCode} voices:`, langVoices.map(v => `${v.name} (${v.lang})`));
     
-    // Fall back to any voice for the language
-    return voices.find(v => v.lang.startsWith(langCode));
-  }, [narratorLanguage]);
+    // Try to find a female voice
+    const femaleVoice = langVoices.find(v => 
+      femaleNames.some(name => v.name.toLowerCase().includes(name))
+    );
+    
+    if (femaleVoice) {
+      console.log(`Selected female voice: ${femaleVoice.name}`);
+      return femaleVoice;
+    }
+    
+    // Fall back to first available voice for the language
+    if (langVoices.length > 0) {
+      console.log(`Fallback voice: ${langVoices[0].name}`);
+      return langVoices[0];
+    }
+    
+    // Last resort: any voice
+    console.log(`No ${langCode} voice found, using default`);
+    return null;
+  }, []);
 
   const speakText = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) {
@@ -170,17 +191,21 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Stop any ongoing speech
     window.speechSynthesis.cancel();
 
+    const currentLang = narratorLanguage;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = narratorLanguage === "nl" ? "nl-NL" : "en-US";
+    utterance.lang = currentLang === "nl" ? "nl-NL" : "en-US";
     utterance.rate = 0.9;
-    utterance.pitch = 1.05; // Slightly higher for a friendlier female tone
+    utterance.pitch = 1.1; // Higher pitch for female-like tone
     
-    // Wait for voices to load if not available yet
     const setVoiceAndSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const voice = getVoiceForLanguage(voices);
+      console.log(`Total voices available: ${voices.length}`);
+      
+      const voice = getVoiceForLanguage(voices, currentLang);
       if (voice) {
         utterance.voice = voice;
+        // Match the language exactly to the voice
+        utterance.lang = voice.lang;
       }
 
       utterance.onstart = () => setIsNarrating(true);
@@ -198,10 +223,19 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     if (voices.length > 0) {
       setVoiceAndSpeak();
     } else {
-      // Wait for voices to load
-      window.speechSynthesis.onvoiceschanged = () => {
+      // Wait for voices to load - use a one-time handler
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
         setVoiceAndSpeak();
       };
+      window.speechSynthesis.onvoiceschanged = handleVoicesChanged;
+      
+      // Fallback timeout in case onvoiceschanged doesn't fire
+      setTimeout(() => {
+        if (window.speechSynthesis.getVoices().length > 0) {
+          setVoiceAndSpeak();
+        }
+      }, 100);
     }
   }, [narratorLanguage, getVoiceForLanguage]);
 
@@ -234,7 +268,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     utterance.pitch = 1.05;
 
     const voices = window.speechSynthesis.getVoices();
-    const voice = getVoiceForLanguage(voices);
+    const voice = getVoiceForLanguage(voices, narratorLanguage);
     if (voice) {
       utterance.voice = voice;
     }
@@ -346,7 +380,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           utterance.pitch = 1.05;
 
           const voices = window.speechSynthesis.getVoices();
-          const voice = getVoiceForLanguage(voices);
+          const voice = getVoiceForLanguage(voices, narratorLanguage);
           if (voice) {
             utterance.voice = voice;
           }
