@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, Loader2, X, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, X, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
+import { useSendTranscript } from '@/hooks/useSendTranscript';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 export const VoiceAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [hasSentTranscript, setHasSentTranscript] = React.useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = React.useState(false);
+  const [guestEmail, setGuestEmail] = React.useState('');
   const {
     isListening,
     isProcessing,
@@ -18,6 +23,83 @@ export const VoiceAssistant: React.FC = () => {
     stopListening,
     clearMessages,
   } = useVoiceAssistant();
+  const { sendTranscript, isLoading: isSendingTranscript } = useSendTranscript();
+  const { user } = useAuth();
+  const messagesCountRef = useRef(0);
+
+  // Convert messages to transcript text
+  const getTranscriptText = useCallback(() => {
+    return messages.map(msg => {
+      const role = msg.role === 'user' ? 'Gebruiker' : 'Assistent';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
+  }, [messages]);
+
+  // Send transcript with email
+  const doSendTranscript = useCallback(async (email: string) => {
+    if (messages.length === 0 || hasSentTranscript) return;
+
+    const transcriptText = getTranscriptText();
+    const userName = user?.user_metadata?.display_name || email.split('@')[0] || '';
+
+    console.log('Sending voice transcript to:', email || '(no email)');
+
+    await sendTranscript({
+      transcript: transcriptText,
+      email,
+      name: userName,
+    });
+
+    setHasSentTranscript(true);
+  }, [messages, hasSentTranscript, getTranscriptText, sendTranscript, user]);
+
+  // Track message count to detect new conversations
+  useEffect(() => {
+    if (messages.length > 0 && messagesCountRef.current === 0) {
+      setHasSentTranscript(false);
+      setShowEmailPrompt(false);
+      setGuestEmail('');
+    }
+    messagesCountRef.current = messages.length;
+  }, [messages.length]);
+
+  // Handle closing the panel
+  const handleClose = useCallback(() => {
+    if (messages.length > 0 && !hasSentTranscript) {
+      if (user?.email) {
+        // Logged in user: auto-send with their email
+        doSendTranscript(user.email);
+        setIsOpen(false);
+      } else {
+        // Guest: show email prompt
+        setShowEmailPrompt(true);
+      }
+    } else {
+      setIsOpen(false);
+    }
+  }, [messages.length, hasSentTranscript, user, doSendTranscript]);
+
+  // Handle guest email submit
+  const handleGuestEmailSubmit = async () => {
+    if (guestEmail.trim()) {
+      await doSendTranscript(guestEmail.trim());
+    }
+    setShowEmailPrompt(false);
+    setIsOpen(false);
+  };
+
+  // Handle skip (no email)
+  const handleSkipEmail = () => {
+    setShowEmailPrompt(false);
+    setIsOpen(false);
+  };
+
+  const handleClearMessages = () => {
+    clearMessages();
+    setHasSentTranscript(false);
+    setShowEmailPrompt(false);
+    setGuestEmail('');
+  };
 
   const handleToggleListening = () => {
     if (isListening) {
@@ -79,7 +161,7 @@ export const VoiceAssistant: React.FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="h-8 w-8"
               >
                 <X className="h-4 w-4" />
@@ -168,7 +250,7 @@ export const VoiceAssistant: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={clearMessages}
+                    onClick={handleClearMessages}
                     className="text-xs"
                   >
                     Wis gesprek
@@ -198,11 +280,87 @@ export const VoiceAssistant: React.FC = () => {
               </div>
               
               <p className="text-center text-xs text-muted-foreground mt-3">
-                {isListening 
-                  ? "Ik luister... Druk nogmaals om te stoppen" 
+                {isListening
+                  ? "Ik luister... Druk nogmaals om te stoppen"
                   : "Druk om te spreken"}
               </p>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Email prompt for guests */}
+      <AnimatePresence>
+        {showEmailPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+            onClick={handleSkipEmail}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
+                  <p className="text-xs text-muted-foreground">Per e-mail, helemaal gratis</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+              </p>
+
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="je@email.nl"
+                  className={cn(
+                    "w-full rounded-xl px-4 py-3 text-sm",
+                    "bg-muted text-foreground placeholder:text-muted-foreground",
+                    "border border-border focus:ring-2 focus:ring-ring focus:outline-none"
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && guestEmail.trim()) {
+                      handleGuestEmailSubmit();
+                    }
+                  }}
+                  autoFocus
+                />
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleSkipEmail}
+                  >
+                    Nee, bedankt
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleGuestEmailSubmit}
+                    disabled={!guestEmail.trim() || isSendingTranscript}
+                  >
+                    {isSendingTranscript ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Verstuur'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Trash2, Loader2, Heart } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Trash2, Loader2, Heart, Mail, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '@/hooks/useChat';
+import { useSendTranscript } from '@/hooks/useSendTranscript';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 const suggestedQuestions = [
@@ -15,9 +17,16 @@ const suggestedQuestions = [
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [hasSentTranscript, setHasSentTranscript] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
   const { messages, isLoading, error, sendMessage, clearMessages } = useChat();
+  const { sendTranscript, isLoading: isSendingTranscript } = useSendTranscript();
+  const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesCountRef = useRef(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,11 +61,89 @@ export const ChatWidget = () => {
     }
   };
 
+  // Convert messages to transcript text
+  const getTranscriptText = useCallback(() => {
+    return messages.map(msg => {
+      const role = msg.role === 'user' ? 'Gebruiker' : 'Assistent';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
+  }, [messages]);
+
+  // Send transcript with email
+  const doSendTranscript = useCallback(async (email: string) => {
+    if (messages.length === 0 || hasSentTranscript) return;
+
+    const transcript = getTranscriptText();
+    const userName = user?.user_metadata?.display_name || email.split('@')[0] || '';
+
+    console.log('Sending transcript to:', email || '(no email)');
+
+    await sendTranscript({
+      transcript,
+      email,
+      name: userName,
+    });
+
+    setHasSentTranscript(true);
+    setEmailSent(true);
+  }, [messages, hasSentTranscript, getTranscriptText, sendTranscript, user]);
+
+  // Track message count to detect new conversations
+  useEffect(() => {
+    if (messages.length > 0 && messagesCountRef.current === 0) {
+      // New conversation started, reset flags
+      setHasSentTranscript(false);
+      setShowEmailPrompt(false);
+      setEmailSent(false);
+      setGuestEmail('');
+    }
+    messagesCountRef.current = messages.length;
+  }, [messages.length]);
+
+  // Handle closing the chat
+  const handleClose = useCallback(() => {
+    if (messages.length > 0 && !hasSentTranscript) {
+      if (user?.email) {
+        // Logged in user: auto-send with their email
+        doSendTranscript(user.email);
+        setIsOpen(false);
+      } else {
+        // Guest: show email prompt
+        setShowEmailPrompt(true);
+      }
+    } else {
+      setIsOpen(false);
+    }
+  }, [messages.length, hasSentTranscript, user, doSendTranscript]);
+
+  // Handle guest email submit
+  const handleGuestEmailSubmit = async () => {
+    if (guestEmail.trim()) {
+      await doSendTranscript(guestEmail.trim());
+    }
+    setShowEmailPrompt(false);
+    setIsOpen(false);
+  };
+
+  // Handle skip (no email)
+  const handleSkipEmail = () => {
+    setShowEmailPrompt(false);
+    setIsOpen(false);
+  };
+
+  const handleClearMessages = () => {
+    clearMessages();
+    setHasSentTranscript(false);
+    setShowEmailPrompt(false);
+    setEmailSent(false);
+    setGuestEmail('');
+  };
+
   return (
     <>
       {/* Chat toggle button */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => isOpen ? handleClose() : setIsOpen(true)}
         className={cn(
           "fixed bottom-6 right-6 z-50 flex items-center justify-center",
           "w-14 h-14 rounded-full shadow-lg",
@@ -117,16 +204,16 @@ export const ChatWidget = () => {
                 </p>
               </div>
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={clearMessages}
-                disabled={messages.length === 0}
-                aria-label="Clear chat"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearMessages}
+                  disabled={messages.length === 0}
+                  aria-label="Clear chat"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -274,6 +361,82 @@ export const ChatWidget = () => {
                 Ik help je te begrijpen - dit is geen juridisch advies.
               </p>
             </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Email prompt for guests */}
+      <AnimatePresence>
+        {showEmailPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+            onClick={handleSkipEmail}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
+                  <p className="text-xs text-muted-foreground">Per e-mail, helemaal gratis</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+              </p>
+
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="je@email.nl"
+                  className={cn(
+                    "w-full rounded-xl px-4 py-3 text-sm",
+                    "bg-muted text-foreground placeholder:text-muted-foreground",
+                    "border border-border focus:ring-2 focus:ring-ring focus:outline-none"
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && guestEmail.trim()) {
+                      handleGuestEmailSubmit();
+                    }
+                  }}
+                  autoFocus
+                />
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleSkipEmail}
+                  >
+                    Nee, bedankt
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleGuestEmailSubmit}
+                    disabled={!guestEmail.trim() || isSendingTranscript}
+                  >
+                    {isSendingTranscript ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Verstuur'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
