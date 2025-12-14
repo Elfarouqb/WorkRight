@@ -173,8 +173,8 @@ export default function Orb({
     void main() {
       vec2 fragCoord = vUv * iResolution.xy;
       vec4 col = mainImage(fragCoord);
-      // Reduce opacity for subtlety
-      gl_FragColor = vec4(col.rgb * col.a * 0.5, col.a * 0.5);
+      // Full opacity, no blur
+      gl_FragColor = vec4(col.rgb * col.a, col.a);
     }
   `;
 
