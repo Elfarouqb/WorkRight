@@ -19,6 +19,7 @@ export const ChatWidget = () => {
   const [input, setInput] = useState('');
   const [hasSentTranscript, setHasSentTranscript] = useState(false);
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [showLoggedInConfirm, setShowLoggedInConfirm] = useState(false);
   const [guestEmail, setGuestEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const { messages, isLoading, error, sendMessage, clearMessages } = useChat();
@@ -107,9 +108,8 @@ export const ChatWidget = () => {
   const handleClose = useCallback(() => {
     if (messages.length > 0 && !hasSentTranscript) {
       if (user?.email) {
-        // Logged in user: auto-send with their email
-        doSendTranscript(user.email);
-        setIsOpen(false);
+        // Logged in user: show confirmation popup
+        setShowLoggedInConfirm(true);
       } else {
         // Guest: show email prompt
         setShowEmailPrompt(true);
@@ -117,7 +117,22 @@ export const ChatWidget = () => {
     } else {
       setIsOpen(false);
     }
-  }, [messages.length, hasSentTranscript, user, doSendTranscript]);
+  }, [messages.length, hasSentTranscript, user]);
+
+  // Handle logged in user confirmation
+  const handleLoggedInConfirm = async () => {
+    if (user?.email) {
+      await doSendTranscript(user.email);
+    }
+    setShowLoggedInConfirm(false);
+    setIsOpen(false);
+  };
+
+  // Handle logged in user skip
+  const handleLoggedInSkip = () => {
+    setShowLoggedInConfirm(false);
+    setIsOpen(false);
+  };
 
   // Handle guest email submit
   const handleGuestEmailSubmit = async () => {
@@ -447,6 +462,69 @@ export const ChatWidget = () => {
                     )}
                   </Button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation popup for logged in users */}
+      <AnimatePresence>
+        {showLoggedInConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4 relative"
+            >
+              {/* Close button */}
+              <button
+                onClick={handleLoggedInSkip}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Sluiten"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
+                  <p className="text-xs text-muted-foreground">Naar {user?.email}</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen per e-mail?
+              </p>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleLoggedInSkip}
+                >
+                  Nee, bedankt
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleLoggedInConfirm}
+                  disabled={isSendingTranscript}
+                >
+                  {isSendingTranscript ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Ja, verstuur'
+                  )}
+                </Button>
               </div>
             </motion.div>
           </motion.div>
