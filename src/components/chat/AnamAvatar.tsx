@@ -1,13 +1,21 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, VideoOff, Mic, MicOff } from 'lucide-react';
+import { Loader2, Video, VideoOff, Mic, MicOff, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSendTranscript } from '@/hooks/useSendTranscript';
+import { useToast } from '@/hooks/use-toast';
 import type { AnamClient } from '@anam-ai/js-sdk';
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface AnamAvatarProps {
-  onMessage?: (message: { role: 'user' | 'assistant'; content: string }) => void;
+  onMessage?: (message: Message) => void;
   className?: string;
 }
 
@@ -15,15 +23,57 @@ const VIDEO_ELEMENT_ID = 'anam-video-element';
 
 export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const anamClientRef = useRef<AnamClient | null>(null);
+  const { user } = useAuth();
+  const { sendTranscript } = useSendTranscript();
+  const { toast } = useToast();
   
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Message tracking for transcript
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [hasSentTranscript, setHasSentTranscript] = useState(false);
+
+  // Get transcript text
+  const getTranscriptText = useCallback(() => {
+    return messages.map(msg => {
+      const role = msg.role === 'user' ? 'Gebruiker' : 'Assistent';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
+  }, [messages]);
+
+  // Send transcript
+  const doSendTranscript = useCallback(async (email: string) => {
+    if (messages.length === 0 || hasSentTranscript) return;
+
+    const transcript = getTranscriptText();
+    const userName = user?.user_metadata?.display_name || email.split('@')[0] || '';
+
+    const result = await sendTranscript({
+      transcript,
+      email,
+      name: userName,
+    });
+
+    if (result.ok) {
+      toast({
+        title: "Samenvatting verzonden",
+        description: email ? `We sturen een samenvatting naar ${email}` : "Je samenvatting wordt verwerkt",
+      });
+    }
+
+    setHasSentTranscript(true);
+  }, [messages, hasSentTranscript, getTranscriptText, sendTranscript, user, toast]);
 
   const startSession = useCallback(async () => {
     setIsConnecting(true);
     setError(null);
+    setMessages([]);
+    setHasSentTranscript(false);
 
     try {
       // Request microphone permission
@@ -57,14 +107,17 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
         setIsConnected(false);
       });
 
-      client.addListener('MESSAGE_HISTORY_UPDATED' as any, (messages: any[]) => {
-        console.log('Message history updated:', messages);
-        if (messages.length > 0 && onMessage) {
-          const lastMessage = messages[messages.length - 1];
-          onMessage({
+      client.addListener('MESSAGE_HISTORY_UPDATED' as any, (messageHistory: any[]) => {
+        console.log('Message history updated:', messageHistory);
+        if (messageHistory.length > 0) {
+          const lastMessage = messageHistory[messageHistory.length - 1];
+          const newMsg: Message = {
             role: lastMessage.role === 'user' ? 'user' : 'assistant',
             content: lastMessage.content,
-          });
+          };
+          
+          setMessages(prev => [...prev, newMsg]);
+          onMessage?.(newMsg);
         }
       });
 
@@ -142,7 +195,16 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       anamClientRef.current = null;
     }
     setIsConnected(false);
-  }, []);
+    
+    // Send transcript when session ends
+    if (messages.length > 0 && !hasSentTranscript) {
+      if (user?.email) {
+        await doSendTranscript(user.email);
+      } else {
+        setShowEmailPrompt(true);
+      }
+    }
+  }, [messages, hasSentTranscript, user, doSendTranscript]);
 
   const toggleMicMute = useCallback(() => {
     if (anamClientRef.current) {
@@ -155,6 +217,20 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
     }
   }, [isMicMuted]);
 
+  // Handle guest email submit
+  const handleGuestEmailSubmit = async () => {
+    if (guestEmail.trim()) {
+      await doSendTranscript(guestEmail.trim());
+    }
+    setShowEmailPrompt(false);
+    setGuestEmail('');
+  };
+
+  // Handle skip email
+  const handleSkipEmail = () => {
+    setShowEmailPrompt(false);
+    setGuestEmail('');
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -167,8 +243,8 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
 
   return (
     <div className={cn("relative", className)}>
-      {/* Video container */}
-      <div className="relative w-full aspect-square max-w-[300px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border">
+      {/* Video container - Larger size */}
+      <div className="relative w-full aspect-[4/3] max-w-[480px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border">
         <AnimatePresence mode="wait">
           {!isConnected && !isConnecting && (
             <motion.div
@@ -178,17 +254,17 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center text-center p-4"
             >
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Video className="w-10 h-10 text-primary" />
+              <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Video className="w-12 h-12 text-primary" />
               </div>
-              <p className="text-lg font-medium text-foreground mb-2">Mira</p>
+              <p className="text-xl font-medium text-foreground mb-2">Mira</p>
               <p className="text-sm text-muted-foreground mb-4">
                 Jouw persoonlijke assistent
               </p>
               {error && (
                 <p className="text-sm text-destructive mb-4">{error}</p>
               )}
-              <Button onClick={startSession} disabled={isConnecting}>
+              <Button onClick={startSession} disabled={isConnecting} size="lg">
                 Start gesprek
               </Button>
             </motion.div>
@@ -202,7 +278,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+              <Loader2 className="w-14 h-14 animate-spin text-primary mb-4" />
               <p className="text-sm text-muted-foreground">Verbinden...</p>
             </motion.div>
           )}
@@ -239,19 +315,19 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               size="icon"
               variant={isMicMuted ? "destructive" : "secondary"}
               onClick={toggleMicMute}
-              className="rounded-full h-10 w-10"
+              className="rounded-full h-12 w-12"
               title={isMicMuted ? "Microfoon aan" : "Microfoon uit"}
             >
-              {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
             <Button
               size="icon"
               variant="destructive"
               onClick={endSession}
-              className="rounded-full h-10 w-10"
+              className="rounded-full h-12 w-12"
               title="Gesprek beëindigen"
             >
-              <VideoOff className="h-4 w-4" />
+              <VideoOff className="h-5 w-5" />
             </Button>
           </motion.div>
         )}
@@ -259,11 +335,83 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
 
       {/* Status indicator */}
       {isConnected && (
-        <div className="flex items-center justify-center gap-2 mt-3">
+        <div className="flex items-center justify-center gap-2 mt-4">
           <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           <span className="text-sm text-muted-foreground">Verbonden met Mira</span>
         </div>
       )}
+
+      {/* Email prompt for guests after video session ends */}
+      <AnimatePresence>
+        {showEmailPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+            onClick={handleSkipEmail}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
+                  <p className="text-xs text-muted-foreground">Per e-mail, helemaal gratis</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+              </p>
+
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="je@email.nl"
+                  className={cn(
+                    "w-full rounded-xl px-4 py-3 text-sm",
+                    "bg-muted text-foreground placeholder:text-muted-foreground",
+                    "border border-border focus:ring-2 focus:ring-ring focus:outline-none"
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && guestEmail.trim()) {
+                      handleGuestEmailSubmit();
+                    }
+                  }}
+                  autoFocus
+                />
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleSkipEmail}
+                  >
+                    Nee, bedankt
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleGuestEmailSubmit}
+                    disabled={!guestEmail.trim()}
+                  >
+                    Verstuur
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

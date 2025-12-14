@@ -170,10 +170,10 @@ const Hulp = () => {
         </div>
 
         {/* Two Panel Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 max-w-6xl mx-auto">
-          {/* Left Panel - Video Avatar */}
-          <div className="lg:border-r lg:border-border lg:pr-6">
-            <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[600px] flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-7xl mx-auto">
+          {/* Left Panel - Video Avatar (Larger) */}
+          <div className="lg:pr-4">
+            <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[650px] flex flex-col">
               {/* Avatar Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2">
@@ -182,24 +182,21 @@ const Hulp = () => {
                 </div>
               </div>
 
-              {/* Anam Video Avatar */}
-              <div className="flex-1 flex items-center justify-center p-4">
+              {/* Anam Video Avatar - Larger container */}
+              <div className="flex-1 flex items-center justify-center p-6">
                 <AnamAvatar 
                   onMessage={(msg) => {
                     console.log('Anam message:', msg);
                   }}
-                  className="w-full"
+                  className="w-full h-full"
                 />
               </div>
             </div>
           </div>
 
-          {/* Divider for large screens */}
-          <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-px bg-border" />
-
           {/* Right Panel - Text Chat */}
-          <div className="lg:pl-6">
-            <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[600px] flex flex-col">
+          <div className="lg:pl-4">
+            <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[650px] flex flex-col">
               {/* Chat Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2">
