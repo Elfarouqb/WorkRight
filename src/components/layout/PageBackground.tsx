@@ -1,4 +1,4 @@
-import Threads from "@/components/ui/Threads";
+import Orb from "@/components/ui/Orb";
 
 const PageBackground = () => {
   return (
@@ -6,13 +6,13 @@ const PageBackground = () => {
       {/* Base gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-secondary/20" />
       
-      {/* Threads animation overlay */}
-      <div className="absolute inset-0 pointer-events-auto">
-        <Threads
-          color={[0.165, 0.616, 0.561]} // Teal primary color
-          amplitude={1}
-          distance={0}
-          enableMouseInteraction={true}
+      {/* Orb animation - positioned for visibility */}
+      <div className="absolute inset-0 pointer-events-auto opacity-40">
+        <Orb
+          hue={0} // Uses teal base colors already
+          hoverIntensity={0.1}
+          rotateOnHover={true}
+          forceHoverState={false}
         />
       </div>
       
