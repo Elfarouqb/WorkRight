@@ -175,7 +175,7 @@ const Hulp = () => {
 
         {/* Two Panel Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-7xl mx-auto">
-          {/* Left Panel - Video Avatar (Larger) */}
+          {/* Left Panel - Video Avatar with Steps */}
           <div className="lg:pr-4">
             <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden h-[650px] flex flex-col">
               {/* Avatar Header */}
@@ -186,13 +186,13 @@ const Hulp = () => {
                 </div>
               </div>
 
-              {/* Anam Video Avatar - Larger container */}
-              <div className="flex-1 flex items-center justify-center p-6">
+              {/* Anam Video Avatar with Steps below */}
+              <div className="flex-1 overflow-hidden p-4">
                 <AnamAvatar 
                   onMessage={(msg) => {
                     console.log('Anam message:', msg);
                   }}
-                  className="w-full h-full"
+                  className="h-full"
                 />
               </div>
             </div>
