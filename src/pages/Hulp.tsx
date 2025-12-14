@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useChat } from '@/hooks/useChat';
 import { useSendTranscript } from '@/hooks/useSendTranscript';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { AiAvatar } from '@/components/chat/AiAvatar';
 import { AnamAvatar } from '@/components/chat/AnamAvatar';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const Hulp = () => {
   const { messages: chatMessages, isLoading, error: chatError, sendMessage, clearMessages: clearChatMessages } = useChat();
   const { sendTranscript, isLoading: isSendingTranscript } = useSendTranscript();
   const { user } = useAuth();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -77,14 +79,21 @@ const Hulp = () => {
 
     console.log('Sending transcript to:', email || '(no email)');
 
-    await sendTranscript({
+    const result = await sendTranscript({
       transcript,
       email,
       name: userName,
     });
 
+    if (result.ok) {
+      toast({
+        title: "Samenvatting verzonden",
+        description: email ? `We sturen een samenvatting naar ${email}` : "Je samenvatting wordt verwerkt",
+      });
+    }
+
     setHasSentTranscript(true);
-  }, [chatMessages, hasSentTranscript, getTranscriptText, sendTranscript, user]);
+  }, [chatMessages, hasSentTranscript, getTranscriptText, sendTranscript, user, toast]);
 
   // Track message count to detect new conversations
   useEffect(() => {
