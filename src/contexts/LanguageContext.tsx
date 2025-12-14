@@ -307,6 +307,38 @@ interface Translations {
   faq5Answer: string;
   faq6Question: string;
   faq6Answer: string;
+
+  // Hulp page
+  hulpTitle: string;
+  hulpSubtitle: string;
+  hulpVideoAssistant: string;
+  hulpTextChat: string;
+  hulpChatSubtitle: string;
+  hulpWelcome: string;
+  hulpWelcomeDesc: string;
+  hulpSuggestionIntro: string;
+  hulpThinking: string;
+  hulpErrorMessage: string;
+  hulpTryAgain: string;
+  hulpInputPlaceholder: string;
+  hulpDisclaimer: string;
+  hulpDisclaimerTitle: string;
+  hulpDisclaimerDesc: string;
+  hulpHumanTitle: string;
+  hulpPrivacyNote: string;
+  hulpSummaryTitle: string;
+  hulpSummaryDesc: string;
+  hulpSummaryQuestion: string;
+  hulpNoThanks: string;
+  hulpSend: string;
+  hulpEmailPlaceholder: string;
+  hulpSummarySent: string;
+  hulpSummarySentDesc: string;
+  // Suggested questions
+  hulpQ1: string;
+  hulpQ2: string;
+  hulpQ3: string;
+  hulpQ4: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -615,6 +647,37 @@ const translations: Record<Language, Translations> = {
     faq5Answer: 'Beschermde gronden zijn kenmerken waarop je niet gediscrimineerd mag worden. In Nederland zijn dit: godsdienst, levensovertuiging, politieke gezindheid, ras, geslacht, nationaliteit, seksuele gerichtheid, burgerlijke staat, handicap of chronische ziekte, en leeftijd.',
     faq6Question: 'Heb ik recht op een WW-uitkering?',
     faq6Answer: 'Je hebt recht op WW als je: minimaal 26 weken hebt gewerkt in de 36 weken voor je werkloosheid, niet zelf ontslag hebt genomen, en beschikbaar bent voor werk. Bij ontslag op staande voet kun je mogelijk geen WW krijgen als het ontslag je eigen schuld was. Het UWV beoordeelt dit per geval.',
+
+    // Hulp page
+    hulpTitle: 'Hulp & Ondersteuning',
+    hulpSubtitle: 'Kies hoe je hulp wilt krijgen: video of tekst',
+    hulpVideoAssistant: 'Video Assistent',
+    hulpTextChat: 'Tekst Chat',
+    hulpChatSubtitle: 'Hier om te helpen, niet te oordelen',
+    hulpWelcome: 'Hoi, ik ben Mira.',
+    hulpWelcomeDesc: 'Ik ben hier om je te helpen begrijpen wat er op je werk is gebeurd. Neem je tijd - er is geen haast.',
+    hulpSuggestionIntro: 'Weet je niet waar je moet beginnen? Probeer een van deze:',
+    hulpThinking: 'Even denken...',
+    hulpErrorMessage: 'Er ging iets mis, maar dat geeft niet. Dit kan gebeuren.',
+    hulpTryAgain: 'Probeer opnieuw',
+    hulpInputPlaceholder: 'Wat houdt je bezig?',
+    hulpDisclaimer: 'Ik help je te begrijpen - dit is geen juridisch advies.',
+    hulpDisclaimerTitle: '⚠️ Dit is informatie, geen juridisch advies',
+    hulpDisclaimerDesc: 'Alles wat we bespreken is bedoeld om je te helpen begrijpen. Het is geen vervanging voor professioneel advies. Laat belangrijke beslissingen altijd controleren door een adviseur.',
+    hulpHumanTitle: '📞 Praat met een echte adviseur',
+    hulpPrivacyNote: 'Je privacy is belangrijk. Alles wat je deelt blijft vertrouwelijk en wordt alleen gebruikt om je te helpen.',
+    hulpSummaryTitle: 'Samenvatting ontvangen?',
+    hulpSummaryDesc: 'Wil je een overzichtelijke samenvatting van dit gesprek ontvangen per e-mail?',
+    hulpSummaryQuestion: 'Per e-mail, helemaal gratis',
+    hulpNoThanks: 'Nee, bedankt',
+    hulpSend: 'Verstuur',
+    hulpEmailPlaceholder: 'je@email.nl',
+    hulpSummarySent: 'Samenvatting verzonden',
+    hulpSummarySentDesc: 'We sturen een samenvatting naar je e-mail',
+    hulpQ1: 'Ik ben ontslagen en weet niet waarom',
+    hulpQ2: 'Wat telt als discriminatie?',
+    hulpQ3: 'Hoeveel tijd heb ik?',
+    hulpQ4: 'Wat doet Het Juridisch Loket?',
   },
   en: {
     // Header
@@ -921,6 +984,37 @@ const translations: Record<Language, Translations> = {
     faq5Answer: 'Protected grounds are characteristics on which you may not be discriminated against. In the Netherlands, these are: religion, life philosophy, political opinion, race, sex, nationality, sexual orientation, marital status, disability or chronic illness, and age.',
     faq6Question: 'Am I entitled to unemployment benefits?',
     faq6Answer: 'You\'re entitled to unemployment benefits if you: worked at least 26 weeks in the 36 weeks before your unemployment, didn\'t resign yourself, and are available for work. With summary dismissal, you may not get benefits if the dismissal was your own fault. UWV assesses this case by case.',
+
+    // Hulp page
+    hulpTitle: 'Help & Support',
+    hulpSubtitle: 'Choose how you want to get help: video or text',
+    hulpVideoAssistant: 'Video Assistant',
+    hulpTextChat: 'Text Chat',
+    hulpChatSubtitle: 'Here to help, not to judge',
+    hulpWelcome: 'Hi, I\'m Mira.',
+    hulpWelcomeDesc: 'I\'m here to help you understand what happened at work. Take your time - there\'s no rush.',
+    hulpSuggestionIntro: 'Not sure where to start? Try one of these:',
+    hulpThinking: 'Thinking...',
+    hulpErrorMessage: 'Something went wrong, but that\'s okay. This can happen.',
+    hulpTryAgain: 'Try again',
+    hulpInputPlaceholder: 'What\'s on your mind?',
+    hulpDisclaimer: 'I help you understand - this is not legal advice.',
+    hulpDisclaimerTitle: '⚠️ This is information, not legal advice',
+    hulpDisclaimerDesc: 'Everything we discuss is meant to help you understand. It\'s not a substitute for professional advice. Always have important decisions reviewed by an advisor.',
+    hulpHumanTitle: '📞 Talk to a real advisor',
+    hulpPrivacyNote: 'Your privacy matters. Everything you share stays confidential and is only used to help you.',
+    hulpSummaryTitle: 'Receive a summary?',
+    hulpSummaryDesc: 'Would you like to receive a clear summary of this conversation by email?',
+    hulpSummaryQuestion: 'By email, completely free',
+    hulpNoThanks: 'No, thanks',
+    hulpSend: 'Send',
+    hulpEmailPlaceholder: 'you@email.com',
+    hulpSummarySent: 'Summary sent',
+    hulpSummarySentDesc: 'We\'ll send a summary to your email',
+    hulpQ1: 'I was dismissed and don\'t know why',
+    hulpQ2: 'What counts as discrimination?',
+    hulpQ3: 'How much time do I have?',
+    hulpQ4: 'What does the Juridisch Loket do?',
   },
 };
 
