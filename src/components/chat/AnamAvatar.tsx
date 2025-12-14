@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSendTranscript } from '@/hooks/useSendTranscript';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { AnamClient } from '@anam-ai/js-sdk';
 
 interface Message {
@@ -44,6 +45,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const { user } = useAuth();
   const { sendTranscript } = useSendTranscript();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -71,7 +73,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-loket`,
-        text: 'Bel Het Juridisch Loket (gratis)',
+        text: t.avatarCallJuridischLoket,
         link: 'tel:0900-8020',
         linkLabel: '0900-8020',
         completed: false,
@@ -83,7 +85,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-mensenrechten`,
-        text: 'Meld discriminatie',
+        text: t.avatarReportDiscrimination,
         link: 'https://www.mensenrechten.nl',
         linkLabel: 'mensenrechten.nl',
         completed: false,
@@ -91,11 +93,11 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       });
     }
     
-    if (contentLower.includes('uwv') || contentLower.includes('ww-uitkering') || contentLower.includes('werkloosheid')) {
+    if (contentLower.includes('uwv') || contentLower.includes('ww-uitkering') || contentLower.includes('werkloosheid') || contentLower.includes('unemployment')) {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-uwv`,
-        text: 'Vraag WW aan bij UWV',
+        text: t.avatarApplyWW,
         link: 'https://www.uwv.nl',
         linkLabel: 'uwv.nl',
         completed: false,
@@ -103,11 +105,11 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       });
     }
     
-    if (contentLower.includes('vakbond') || contentLower.includes('fnv') || contentLower.includes('cnv')) {
+    if (contentLower.includes('vakbond') || contentLower.includes('fnv') || contentLower.includes('cnv') || contentLower.includes('union')) {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-vakbond`,
-        text: 'Neem contact op met je vakbond',
+        text: t.avatarContactUnion,
         link: 'https://www.fnv.nl',
         linkLabel: 'fnv.nl',
         completed: false,
@@ -115,23 +117,23 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       });
     }
     
-    if (contentLower.includes('bewijs') || contentLower.includes('documenteer') || contentLower.includes('verzamel')) {
+    if (contentLower.includes('bewijs') || contentLower.includes('documenteer') || contentLower.includes('verzamel') || contentLower.includes('evidence') || contentLower.includes('collect')) {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-bewijs`,
-        text: 'Verzamel bewijs (emails, documenten)',
+        text: t.avatarCollectEvidence,
         completed: false,
         stepNumber: stepCounterRef.current,
       });
     }
     
-    if (contentLower.includes('termijn') || contentLower.includes('deadline') || contentLower.includes('2 maanden') || contentLower.includes('6 maanden')) {
+    if (contentLower.includes('termijn') || contentLower.includes('deadline') || contentLower.includes('2 maanden') || contentLower.includes('6 maanden') || contentLower.includes('months')) {
       stepCounterRef.current++;
       newSteps.push({
         id: `step-${Date.now()}-termijn`,
-        text: 'Let op je termijnen!',
+        text: t.avatarWatchDeadlines,
         link: '/termijnen',
-        linkLabel: 'Bekijk termijnen',
+        linkLabel: t.avatarViewDeadlines,
         completed: false,
         stepNumber: stepCounterRef.current,
       });
@@ -145,7 +147,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
         return [...prev, ...uniqueNewSteps].slice(-6);
       });
     }
-  }, []);
+  }, [t]);
 
   // Get transcript text
   const getTranscriptText = useCallback(() => {
@@ -379,15 +381,15 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <Video className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-lg font-medium text-foreground mb-1">Mira</p>
+              <p className="text-lg font-medium text-foreground mb-1">{t.avatarMira}</p>
               <p className="text-xs text-muted-foreground mb-3">
-                Jouw persoonlijke assistent
+                {t.avatarPersonalAssistant}
               </p>
               {error && (
                 <p className="text-xs text-destructive mb-3">{error}</p>
               )}
               <Button onClick={startSession} disabled={isConnecting} size="default">
-                Start gesprek
+                {t.avatarStartConversation}
               </Button>
             </motion.div>
           )}
@@ -401,7 +403,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
               <Loader2 className="w-10 h-10 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground">Verbinden...</p>
+              <p className="text-sm text-muted-foreground">{t.avatarConnecting}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -438,14 +440,14 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               variant={isMicMuted ? "destructive" : "secondary"}
               onClick={toggleMicMute}
               className="rounded-full h-10 w-10"
-              title={isMicMuted ? "Microfoon aan" : "Microfoon uit"}
+              title={isMicMuted ? t.avatarMicOn : t.avatarMicOff}
             >
               {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
             <Button
               onClick={endSession}
               className="h-12 w-12 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-lg"
-              title="Gesprek stoppen"
+              title={t.avatarStopConversation}
             >
               <Square className="h-5 w-5 fill-current" />
             </Button>
@@ -457,7 +459,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       {isConnected && (
         <div className="flex items-center justify-center gap-2 mt-3 shrink-0">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs text-muted-foreground">Verbonden met Mira</span>
+          <span className="text-xs text-muted-foreground">{t.avatarConnected}</span>
         </div>
       )}
 
@@ -472,7 +474,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           >
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
               <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                📋 Jouw stappenplan
+                {t.avatarActionPlan}
               </p>
               <div className="space-y-2">
                 {actionSteps.map((step, i) => (

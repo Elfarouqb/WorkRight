@@ -339,6 +339,23 @@ interface Translations {
   hulpQ2: string;
   hulpQ3: string;
   hulpQ4: string;
+  // Video assistant
+  avatarMira: string;
+  avatarPersonalAssistant: string;
+  avatarStartConversation: string;
+  avatarConnecting: string;
+  avatarConnected: string;
+  avatarMicOn: string;
+  avatarMicOff: string;
+  avatarStopConversation: string;
+  avatarActionPlan: string;
+  avatarCallJuridischLoket: string;
+  avatarReportDiscrimination: string;
+  avatarApplyWW: string;
+  avatarContactUnion: string;
+  avatarCollectEvidence: string;
+  avatarWatchDeadlines: string;
+  avatarViewDeadlines: string;
 
   // Accessibility
   accessibilityTitle: string;
@@ -697,6 +714,23 @@ const translations: Record<Language, Translations> = {
     hulpQ2: 'Wat telt als discriminatie?',
     hulpQ3: 'Hoeveel tijd heb ik?',
     hulpQ4: 'Wat doet Het Juridisch Loket?',
+    // Video assistant
+    avatarMira: 'Mira',
+    avatarPersonalAssistant: 'Jouw persoonlijke assistent',
+    avatarStartConversation: 'Start gesprek',
+    avatarConnecting: 'Verbinden...',
+    avatarConnected: 'Verbonden met Mira',
+    avatarMicOn: 'Microfoon aan',
+    avatarMicOff: 'Microfoon uit',
+    avatarStopConversation: 'Gesprek stoppen',
+    avatarActionPlan: '📋 Jouw stappenplan',
+    avatarCallJuridischLoket: 'Bel Het Juridisch Loket (gratis)',
+    avatarReportDiscrimination: 'Meld discriminatie',
+    avatarApplyWW: 'Vraag WW aan bij UWV',
+    avatarContactUnion: 'Neem contact op met je vakbond',
+    avatarCollectEvidence: 'Verzamel bewijs (emails, documenten)',
+    avatarWatchDeadlines: 'Let op je termijnen!',
+    avatarViewDeadlines: 'Bekijk termijnen',
 
     // Accessibility
     accessibilityTitle: 'Toegankelijkheid',
@@ -1053,6 +1087,23 @@ const translations: Record<Language, Translations> = {
     hulpQ2: 'What counts as discrimination?',
     hulpQ3: 'How much time do I have?',
     hulpQ4: 'What does the Juridisch Loket do?',
+    // Video assistant
+    avatarMira: 'Mira',
+    avatarPersonalAssistant: 'Your personal assistant',
+    avatarStartConversation: 'Start conversation',
+    avatarConnecting: 'Connecting...',
+    avatarConnected: 'Connected with Mira',
+    avatarMicOn: 'Microphone on',
+    avatarMicOff: 'Microphone off',
+    avatarStopConversation: 'Stop conversation',
+    avatarActionPlan: '📋 Your action plan',
+    avatarCallJuridischLoket: 'Call Het Juridisch Loket (free)',
+    avatarReportDiscrimination: 'Report discrimination',
+    avatarApplyWW: 'Apply for unemployment benefits at UWV',
+    avatarContactUnion: 'Contact your trade union',
+    avatarCollectEvidence: 'Collect evidence (emails, documents)',
+    avatarWatchDeadlines: 'Watch your deadlines!',
+    avatarViewDeadlines: 'View deadlines',
 
     // Accessibility
     accessibilityTitle: 'Accessibility',
