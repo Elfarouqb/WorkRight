@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, Square, Mic, MicOff, Mail, Check } from 'lucide-react';
+import { Loader2, Video, Square, Mic, MicOff, Mail, Check, CircleCheck, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,12 @@ import type { AnamClient } from '@anam-ai/js-sdk';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+}
+
+interface ActionStep {
+  id: string;
+  text: string;
+  completed: boolean;
 }
 
 interface AnamAvatarProps {
@@ -37,6 +43,39 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [guestEmail, setGuestEmail] = useState('');
   const [hasSentTranscript, setHasSentTranscript] = useState(false);
+  
+  // Action steps tracking - extracted from AI responses
+  const [actionSteps, setActionSteps] = useState<ActionStep[]>([]);
+
+  // Extract action steps from assistant messages
+  const extractActionSteps = useCallback((content: string) => {
+    // Look for actionable items in the message
+    const actionPatterns = [
+      /(?:je moet|je kunt|je kan|probeer|vergeet niet|belangrijk|stap \d+)[:\s]+([^.!?]+[.!?])/gi,
+      /(?:→|•|➤|\d+\.)\s*([^.!?\n]+[.!?]?)/g,
+    ];
+    
+    const newSteps: ActionStep[] = [];
+    
+    for (const pattern of actionPatterns) {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const text = match[1]?.trim();
+        if (text && text.length > 10 && text.length < 100) {
+          newSteps.push({
+            id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            text: text,
+            completed: false,
+          });
+        }
+      }
+    }
+    
+    // If we found steps, add them (max 5)
+    if (newSteps.length > 0) {
+      setActionSteps(prev => [...prev, ...newSteps.slice(0, 3)].slice(-5));
+    }
+  }, []);
 
   // Get transcript text
   const getTranscriptText = useCallback(() => {
@@ -69,11 +108,19 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
     setHasSentTranscript(true);
   }, [messages, hasSentTranscript, getTranscriptText, sendTranscript, user, toast]);
 
+  // Toggle step completion
+  const toggleStepComplete = useCallback((stepId: string) => {
+    setActionSteps(prev => prev.map(step => 
+      step.id === stepId ? { ...step, completed: !step.completed } : step
+    ));
+  }, []);
+
   const startSession = useCallback(async () => {
     setIsConnecting(true);
     setError(null);
     setMessages([]);
     setHasSentTranscript(false);
+    setActionSteps([]);
 
     try {
       // Request microphone permission
@@ -118,6 +165,11 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           
           setMessages(prev => [...prev, newMsg]);
           onMessage?.(newMsg);
+          
+          // Extract action steps from assistant messages
+          if (newMsg.role === 'assistant') {
+            extractActionSteps(newMsg.content);
+          }
         }
       });
 
@@ -183,7 +235,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
       setError(err instanceof Error ? err.message : 'Failed to connect');
       setIsConnecting(false);
     }
-  }, [onMessage]);
+  }, [onMessage, extractActionSteps]);
 
   const endSession = useCallback(async () => {
     if (anamClientRef.current) {
@@ -242,9 +294,9 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   }, []);
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative flex items-center justify-center", className)}>
       {/* Video container - Larger size */}
-      <div className="relative w-full aspect-[3/4] max-w-[420px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border">
+      <div className="relative w-full aspect-[3/4] max-w-[420px] rounded-2xl overflow-hidden bg-muted border border-border">
         <AnimatePresence mode="wait">
           {!isConnected && !isConnecting && (
             <motion.div
@@ -331,6 +383,50 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           </motion.div>
         )}
       </div>
+
+      {/* Action steps panel - shows on the left when connected and there are steps */}
+      <AnimatePresence>
+        {isConnected && actionSteps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute left-0 top-0 bottom-0 w-48 bg-card/95 backdrop-blur-sm border-r border-border p-3 overflow-y-auto rounded-l-2xl"
+          >
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              Te doen
+            </p>
+            <div className="space-y-2">
+              {actionSteps.map((step, i) => (
+                <motion.button
+                  key={step.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => toggleStepComplete(step.id)}
+                  className={cn(
+                    "w-full flex items-start gap-2 p-2 rounded-lg text-left transition-colors",
+                    "hover:bg-muted/50",
+                    step.completed && "opacity-60"
+                  )}
+                >
+                  {step.completed ? (
+                    <CircleCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                  )}
+                  <span className={cn(
+                    "text-xs leading-snug",
+                    step.completed ? "line-through text-muted-foreground" : "text-foreground"
+                  )}>
+                    {step.text}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Status indicator */}
       {isConnected && (
