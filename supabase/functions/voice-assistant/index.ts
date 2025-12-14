@@ -636,7 +636,8 @@ serve(async (req) => {
 
       console.log('Converting to speech (streaming):', speakText);
 
-      const voiceId = 'EXAVITQu4vr4xnSDxMaL';
+      // Use Laura - a warm, friendly female Dutch voice
+      const voiceId = 'FGY2WhTYpPnrIDTdsKH5';
 
       const ttsResponse = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
