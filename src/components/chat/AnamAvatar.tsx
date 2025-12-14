@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, Square, Mic, MicOff, Mail, Check, CircleCheck, Circle } from 'lucide-react';
+import { Loader2, Video, Square, Mic, MicOff, Mail, CircleCheck, Circle, ExternalLink, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,10 @@ interface Message {
 interface ActionStep {
   id: string;
   text: string;
+  link?: string;
+  linkLabel?: string;
   completed: boolean;
+  stepNumber: number;
 }
 
 interface AnamAvatarProps {
@@ -26,6 +29,15 @@ interface AnamAvatarProps {
 }
 
 const VIDEO_ELEMENT_ID = 'anam-video-element';
+
+// Predefined helpful resources
+const RESOURCES = {
+  loket: { label: 'Het Juridisch Loket', url: 'tel:0900-8020', icon: 'phone' },
+  mensenrechten: { label: 'College Mensenrechten', url: 'https://www.mensenrechten.nl', icon: 'link' },
+  uwv: { label: 'UWV', url: 'https://www.uwv.nl', icon: 'link' },
+  fnv: { label: 'FNV Vakbond', url: 'https://www.fnv.nl', icon: 'link' },
+  cnv: { label: 'CNV Vakbond', url: 'https://www.cnv.nl', icon: 'link' },
+};
 
 export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const anamClientRef = useRef<AnamClient | null>(null);
@@ -44,36 +56,94 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   const [guestEmail, setGuestEmail] = useState('');
   const [hasSentTranscript, setHasSentTranscript] = useState(false);
   
-  // Action steps tracking - extracted from AI responses
+  // Action steps tracking
   const [actionSteps, setActionSteps] = useState<ActionStep[]>([]);
+  const stepCounterRef = useRef(0);
 
-  // Extract action steps from assistant messages
+  // Extract action steps from assistant messages with better pattern matching
   const extractActionSteps = useCallback((content: string) => {
-    // Look for actionable items in the message
-    const actionPatterns = [
-      /(?:je moet|je kunt|je kan|probeer|vergeet niet|belangrijk|stap \d+)[:\s]+([^.!?]+[.!?])/gi,
-      /(?:→|•|➤|\d+\.)\s*([^.!?\n]+[.!?]?)/g,
-    ];
-    
     const newSteps: ActionStep[] = [];
     
-    for (const pattern of actionPatterns) {
-      let match;
-      while ((match = pattern.exec(content)) !== null) {
-        const text = match[1]?.trim();
-        if (text && text.length > 10 && text.length < 100) {
-          newSteps.push({
-            id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            text: text,
-            completed: false,
-          });
-        }
-      }
+    // Detect mentions of resources and create steps
+    const contentLower = content.toLowerCase();
+    
+    if (contentLower.includes('juridisch loket') || contentLower.includes('0900-8020')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-loket`,
+        text: 'Bel Het Juridisch Loket (gratis)',
+        link: 'tel:0900-8020',
+        linkLabel: '0900-8020',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
     }
     
-    // If we found steps, add them (max 5)
+    if (contentLower.includes('mensenrechten') || contentLower.includes('college')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-mensenrechten`,
+        text: 'Meld discriminatie',
+        link: 'https://www.mensenrechten.nl',
+        linkLabel: 'mensenrechten.nl',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
+    }
+    
+    if (contentLower.includes('uwv') || contentLower.includes('ww-uitkering') || contentLower.includes('werkloosheid')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-uwv`,
+        text: 'Vraag WW aan bij UWV',
+        link: 'https://www.uwv.nl',
+        linkLabel: 'uwv.nl',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
+    }
+    
+    if (contentLower.includes('vakbond') || contentLower.includes('fnv') || contentLower.includes('cnv')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-vakbond`,
+        text: 'Neem contact op met je vakbond',
+        link: 'https://www.fnv.nl',
+        linkLabel: 'fnv.nl',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
+    }
+    
+    if (contentLower.includes('bewijs') || contentLower.includes('documenteer') || contentLower.includes('verzamel')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-bewijs`,
+        text: 'Verzamel bewijs (emails, documenten)',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
+    }
+    
+    if (contentLower.includes('termijn') || contentLower.includes('deadline') || contentLower.includes('2 maanden') || contentLower.includes('6 maanden')) {
+      stepCounterRef.current++;
+      newSteps.push({
+        id: `step-${Date.now()}-termijn`,
+        text: 'Let op je termijnen!',
+        link: '/termijnen',
+        linkLabel: 'Bekijk termijnen',
+        completed: false,
+        stepNumber: stepCounterRef.current,
+      });
+    }
+    
+    // Add new steps, avoiding duplicates
     if (newSteps.length > 0) {
-      setActionSteps(prev => [...prev, ...newSteps.slice(0, 3)].slice(-5));
+      setActionSteps(prev => {
+        const existingTexts = new Set(prev.map(s => s.text));
+        const uniqueNewSteps = newSteps.filter(s => !existingTexts.has(s.text));
+        return [...prev, ...uniqueNewSteps].slice(-6);
+      });
     }
   }, []);
 
@@ -294,9 +364,9 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   }, []);
 
   return (
-    <div className={cn("relative flex items-center justify-center", className)}>
-      {/* Video container - Larger size */}
-      <div className="relative w-full aspect-[3/4] max-w-[420px] rounded-2xl overflow-hidden bg-muted border border-border">
+    <div className={cn("flex flex-col h-full", className)}>
+      {/* Compact Video container */}
+      <div className="relative w-full aspect-square max-w-[280px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border shrink-0">
         <AnimatePresence mode="wait">
           {!isConnected && !isConnecting && (
             <motion.div
@@ -306,17 +376,17 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center text-center p-4"
             >
-              <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Video className="w-12 h-12 text-primary" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <Video className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-xl font-medium text-foreground mb-2">Mira</p>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-lg font-medium text-foreground mb-1">Mira</p>
+              <p className="text-xs text-muted-foreground mb-3">
                 Jouw persoonlijke assistent
               </p>
               {error && (
-                <p className="text-sm text-destructive mb-4">{error}</p>
+                <p className="text-xs text-destructive mb-3">{error}</p>
               )}
-              <Button onClick={startSession} disabled={isConnecting} size="lg">
+              <Button onClick={startSession} disabled={isConnecting} size="default">
                 Start gesprek
               </Button>
             </motion.div>
@@ -330,13 +400,13 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <Loader2 className="w-14 h-14 animate-spin text-primary mb-4" />
+              <Loader2 className="w-10 h-10 animate-spin text-primary mb-3" />
               <p className="text-sm text-muted-foreground">Verbinden...</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Video element - always rendered but hidden when not connected */}
+        {/* Video element */}
         <video
           id={VIDEO_ELEMENT_ID}
           autoPlay
@@ -348,7 +418,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           )}
         />
         
-        {/* Separate audio element for Anam audio output */}
+        {/* Audio element */}
         <audio 
           id="anam-audio-output" 
           autoPlay 
@@ -356,87 +426,123 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           style={{ display: 'none' }}
         />
 
-        {/* Controls overlay when connected */}
+        {/* Controls overlay */}
         {isConnected && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2"
           >
             <Button
               size="icon"
               variant={isMicMuted ? "destructive" : "secondary"}
               onClick={toggleMicMute}
-              className="rounded-full h-12 w-12"
+              className="rounded-full h-10 w-10"
               title={isMicMuted ? "Microfoon aan" : "Microfoon uit"}
             >
-              {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
-            {/* Big red square STOP button */}
             <Button
               onClick={endSession}
-              className="h-14 w-14 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-lg"
+              className="h-12 w-12 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-lg"
               title="Gesprek stoppen"
             >
-              <Square className="h-6 w-6 fill-current" />
+              <Square className="h-5 w-5 fill-current" />
             </Button>
           </motion.div>
         )}
       </div>
 
-      {/* Action steps panel - shows on the left when connected and there are steps */}
+      {/* Status indicator */}
+      {isConnected && (
+        <div className="flex items-center justify-center gap-2 mt-3 shrink-0">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs text-muted-foreground">Verbonden met Mira</span>
+        </div>
+      )}
+
+      {/* Action Steps Panel - Below video */}
       <AnimatePresence>
-        {isConnected && actionSteps.length > 0 && (
+        {actionSteps.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="absolute left-0 top-0 bottom-0 w-48 bg-card/95 backdrop-blur-sm border-r border-border p-3 overflow-y-auto rounded-l-2xl"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mt-4 flex-1 overflow-y-auto"
           >
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Te doen
-            </p>
-            <div className="space-y-2">
-              {actionSteps.map((step, i) => (
-                <motion.button
-                  key={step.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => toggleStepComplete(step.id)}
-                  className={cn(
-                    "w-full flex items-start gap-2 p-2 rounded-lg text-left transition-colors",
-                    "hover:bg-muted/50",
-                    step.completed && "opacity-60"
-                  )}
-                >
-                  {step.completed ? (
-                    <CircleCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                  )}
-                  <span className={cn(
-                    "text-xs leading-snug",
-                    step.completed ? "line-through text-muted-foreground" : "text-foreground"
-                  )}>
-                    {step.text}
-                  </span>
-                </motion.button>
-              ))}
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+              <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                📋 Jouw stappenplan
+              </p>
+              <div className="space-y-2">
+                {actionSteps.map((step, i) => (
+                  <motion.div
+                    key={step.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={cn(
+                      "flex items-start gap-3 p-3 rounded-lg transition-colors",
+                      "bg-background border border-border",
+                      step.completed && "opacity-60"
+                    )}
+                  >
+                    <button
+                      onClick={() => toggleStepComplete(step.id)}
+                      className="shrink-0 mt-0.5"
+                    >
+                      {step.completed ? (
+                        <CircleCheck className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                          Stap {step.stepNumber}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-sm mt-1",
+                        step.completed ? "line-through text-muted-foreground" : "text-foreground"
+                      )}>
+                        {step.text}
+                      </p>
+                      {step.link && (
+                        <a
+                          href={step.link}
+                          target={step.link.startsWith('http') ? '_blank' : undefined}
+                          rel={step.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                          className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline font-medium"
+                        >
+                          {step.link.startsWith('tel:') ? (
+                            <Phone className="w-3 h-3" />
+                          ) : (
+                            <ExternalLink className="w-3 h-3" />
+                          )}
+                          {step.linkLabel || step.link}
+                        </a>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Status indicator */}
-      {isConnected && (
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <span className="text-sm text-muted-foreground">Verbonden met Mira</span>
+      {/* Empty state when connected but no steps yet */}
+      {isConnected && actionSteps.length === 0 && (
+        <div className="mt-4 flex-1 flex items-center justify-center">
+          <p className="text-xs text-muted-foreground text-center px-4">
+            Vertel me wat er is gebeurd. Ik maak een stappenplan voor je.
+          </p>
         </div>
       )}
 
-      {/* Email prompt for guests OR confirmation for logged-in users after session ends */}
+      {/* Email prompt modal */}
       <AnimatePresence>
         {showEmailPrompt && (
           <motion.div
@@ -464,7 +570,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
               </div>
 
               <p className="text-sm text-muted-foreground">
-                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen?
               </p>
 
               <div className="space-y-3">
@@ -507,8 +613,6 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Success toast shown for logged-in users - handled via toast already */}
     </div>
   );
 };
