@@ -270,13 +270,22 @@ export const ChatWidget = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={cn(
-                    "flex",
+                    "flex gap-2",
                     msg.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
+                  {msg.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-1 border border-border">
+                      <img 
+                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face" 
+                        alt="Assistent"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div
                     className={cn(
-                      "max-w-[85%] px-4 py-3 rounded-2xl leading-relaxed",
+                      "max-w-[80%] px-4 py-3 rounded-2xl leading-relaxed",
                       "text-sm sm:text-base",
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground rounded-br-md'
