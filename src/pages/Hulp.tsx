@@ -35,13 +35,17 @@ const Hulp = () => {
   const [guestEmail, setGuestEmail] = useState('');
   const messagesCountRef = useRef(0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = useCallback(() => {
+    // Use setTimeout to ensure DOM is updated before scrolling
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  }, []);
 
+  // Scroll when messages change OR when loading state changes
   useEffect(() => {
     scrollToBottom();
-  }, [chatMessages]);
+  }, [chatMessages, isLoading, scrollToBottom]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
