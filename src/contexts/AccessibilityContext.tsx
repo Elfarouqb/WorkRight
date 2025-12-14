@@ -18,12 +18,17 @@ interface AccessibilityContextType {
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
+// CSS class for highlighting narrated elements
+const NARRATOR_HIGHLIGHT_CLASS = "narrator-highlight";
+
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   const [fontMode, setFontModeState] = useState<FontMode>("default");
   const [textSize, setTextSizeState] = useState<TextSize>("default");
   const [narratorEnabled, setNarratorEnabledState] = useState(false);
   const [isNarrating, setIsNarrating] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const currentElementRef = useRef<Element | null>(null);
+  const elementsQueueRef = useRef<Element[]>([]);
+  const currentIndexRef = useRef(0);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -34,6 +39,25 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     if (savedFontMode) setFontModeState(savedFontMode);
     if (savedTextSize) setTextSizeState(savedTextSize);
     setNarratorEnabledState(savedNarrator);
+  }, []);
+
+  // Inject highlight styles
+  useEffect(() => {
+    const styleId = "narrator-highlight-styles";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        .${NARRATOR_HIGHLIGHT_CLASS} {
+          outline: 3px solid hsl(var(--primary)) !important;
+          outline-offset: 4px !important;
+          border-radius: 8px !important;
+          transition: outline 0.2s ease-in-out !important;
+          background-color: hsl(var(--primary) / 0.05) !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
   }, []);
 
   // Apply classes to document root
@@ -65,13 +89,21 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     localStorage.setItem("wr-text-size", size);
   };
 
-  const setNarratorEnabled = (enabled: boolean) => {
-    setNarratorEnabledState(enabled);
-    localStorage.setItem("wr-narrator", String(enabled));
-    if (!enabled) {
-      stopNarrating();
+  const clearHighlight = useCallback(() => {
+    if (currentElementRef.current) {
+      currentElementRef.current.classList.remove(NARRATOR_HIGHLIGHT_CLASS);
+      currentElementRef.current = null;
     }
-  };
+  }, []);
+
+  const highlightElement = useCallback((element: Element) => {
+    clearHighlight();
+    element.classList.add(NARRATOR_HIGHLIGHT_CLASS);
+    currentElementRef.current = element;
+    
+    // Scroll element into view
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [clearHighlight]);
 
   const speakText = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) {
@@ -98,28 +130,107 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     utterance.onend = () => setIsNarrating(false);
     utterance.onerror = () => setIsNarrating(false);
 
-    utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  const startNarrating = useCallback(() => {
-    if (!narratorEnabled) return;
-    
-    // Get main content text
-    const mainContent = document.querySelector('main') || document.body;
-    const textContent = mainContent.innerText || mainContent.textContent || '';
-    
-    if (textContent.trim()) {
-      speakText(textContent);
+  const narrateNextElement = useCallback(() => {
+    const elements = elementsQueueRef.current;
+    const index = currentIndexRef.current;
+
+    if (index >= elements.length) {
+      // Done narrating all elements
+      clearHighlight();
+      setIsNarrating(false);
+      return;
     }
-  }, [narratorEnabled, speakText]);
+
+    const element = elements[index];
+    const text = element.textContent?.trim() || "";
+
+    if (!text) {
+      // Skip empty elements
+      currentIndexRef.current++;
+      narrateNextElement();
+      return;
+    }
+
+    highlightElement(element);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'nl-NL';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const dutchVoice = voices.find(v => v.lang.startsWith('nl'));
+    if (dutchVoice) {
+      utterance.voice = dutchVoice;
+    }
+
+    utterance.onend = () => {
+      currentIndexRef.current++;
+      narrateNextElement();
+    };
+
+    utterance.onerror = () => {
+      clearHighlight();
+      setIsNarrating(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }, [clearHighlight, highlightElement]);
+
+  const startNarrating = useCallback(() => {
+    if (!narratorEnabled || !('speechSynthesis' in window)) return;
+    
+    // Stop any current narration
+    window.speechSynthesis.cancel();
+    clearHighlight();
+
+    // Find readable elements - headings, paragraphs, list items, buttons with text
+    const mainContent = document.querySelector('main') || document.body;
+    const readableSelectors = 'h1, h2, h3, h4, h5, h6, p, li, button, a, span.text-lg, span.text-xl, span.text-2xl, div.text-lg, div.text-xl';
+    const elements = Array.from(mainContent.querySelectorAll(readableSelectors))
+      .filter(el => {
+        const text = el.textContent?.trim();
+        // Filter out empty elements and elements that are children of other readable elements
+        if (!text || text.length < 2) return false;
+        // Check if parent is already in our list (avoid duplicate reading)
+        const parent = el.parentElement;
+        if (parent && parent.matches(readableSelectors)) return false;
+        return true;
+      });
+
+    if (elements.length === 0) {
+      // Fallback: read all text at once
+      const text = mainContent.textContent?.trim() || "";
+      if (text) speakText(text);
+      return;
+    }
+
+    elementsQueueRef.current = elements;
+    currentIndexRef.current = 0;
+    setIsNarrating(true);
+    narrateNextElement();
+  }, [narratorEnabled, clearHighlight, speakText, narrateNextElement]);
 
   const stopNarrating = useCallback(() => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    clearHighlight();
+    elementsQueueRef.current = [];
+    currentIndexRef.current = 0;
     setIsNarrating(false);
-  }, []);
+  }, [clearHighlight]);
+
+  const setNarratorEnabled = (enabled: boolean) => {
+    setNarratorEnabledState(enabled);
+    localStorage.setItem("wr-narrator", String(enabled));
+    if (!enabled) {
+      stopNarrating();
+    }
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -127,8 +238,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      clearHighlight();
     };
-  }, []);
+  }, [clearHighlight]);
 
   return (
     <AccessibilityContext.Provider value={{ 
