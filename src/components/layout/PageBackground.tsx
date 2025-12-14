@@ -2,17 +2,19 @@ import Threads from "@/components/ui/Threads";
 
 const PageBackground = () => {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
       {/* Base gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-secondary/20" />
       
       {/* Threads animation overlay */}
-      <Threads
-        color={[0.165, 0.616, 0.561]} // Teal primary color
-        amplitude={0.5}
-        distance={0.4}
-        enableMouseInteraction={true}
-      />
+      <div className="absolute inset-0 pointer-events-auto">
+        <Threads
+          color={[0.165, 0.616, 0.561]} // Teal primary color
+          amplitude={1}
+          distance={0}
+          enableMouseInteraction={true}
+        />
+      </div>
       
       {/* Subtle accent glow */}
       <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-primary/3 rounded-full blur-[150px]" />

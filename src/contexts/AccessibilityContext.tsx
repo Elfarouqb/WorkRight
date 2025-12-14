@@ -175,18 +175,34 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     utterance.rate = 0.9;
     utterance.pitch = 1.05; // Slightly higher for a friendlier female tone
     
-    // Try to find the best voice
+    // Wait for voices to load if not available yet
+    const setVoiceAndSpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const voice = getVoiceForLanguage(voices);
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      utterance.onstart = () => setIsNarrating(true);
+      utterance.onend = () => setIsNarrating(false);
+      utterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e);
+        setIsNarrating(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Check if voices are already loaded
     const voices = window.speechSynthesis.getVoices();
-    const voice = getVoiceForLanguage(voices);
-    if (voice) {
-      utterance.voice = voice;
+    if (voices.length > 0) {
+      setVoiceAndSpeak();
+    } else {
+      // Wait for voices to load
+      window.speechSynthesis.onvoiceschanged = () => {
+        setVoiceAndSpeak();
+      };
     }
-
-    utterance.onstart = () => setIsNarrating(true);
-    utterance.onend = () => setIsNarrating(false);
-    utterance.onerror = () => setIsNarrating(false);
-
-    window.speechSynthesis.speak(utterance);
   }, [narratorLanguage, getVoiceForLanguage]);
 
   const narrateNextElement = useCallback(() => {
