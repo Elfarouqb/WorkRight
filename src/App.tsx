@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import PageBackground from "@/components/layout/PageBackground";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Rechtenverkenner from "./pages/Rechtenverkenner";
@@ -25,6 +26,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <PageBackground />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
