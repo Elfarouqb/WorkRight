@@ -29,6 +29,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const currentElementRef = useRef<Element | null>(null);
   const elementsQueueRef = useRef<Element[]>([]);
   const currentIndexRef = useRef(0);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hoveredElementRef = useRef<Element | null>(null);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -232,6 +234,98 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
   };
 
+  // Hover-to-speak functionality
+  useEffect(() => {
+    if (!narratorEnabled || !('speechSynthesis' in window)) return;
+
+    const HOVER_DELAY = 1500; // 1.5 seconds
+
+    const handleMouseEnter = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target) return;
+
+      // Check if it's a readable element
+      const readableSelectors = 'h1, h2, h3, h4, h5, h6, p, li, button, a, span, label, [role="button"]';
+      const readableElement = target.matches(readableSelectors) 
+        ? target 
+        : target.closest(readableSelectors);
+
+      if (!readableElement) return;
+
+      const text = readableElement.textContent?.trim();
+      if (!text || text.length < 2) return;
+
+      // Clear any existing timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+
+      hoveredElementRef.current = readableElement;
+
+      // Set timeout to speak after 1.5 seconds
+      hoverTimeoutRef.current = setTimeout(() => {
+        if (hoveredElementRef.current === readableElement) {
+          // Add highlight
+          readableElement.classList.add(NARRATOR_HIGHLIGHT_CLASS);
+          
+          // Speak the text
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'nl-NL';
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
+
+          const voices = window.speechSynthesis.getVoices();
+          const dutchVoice = voices.find(v => v.lang.startsWith('nl'));
+          if (dutchVoice) {
+            utterance.voice = dutchVoice;
+          }
+
+          utterance.onend = () => {
+            readableElement.classList.remove(NARRATOR_HIGHLIGHT_CLASS);
+          };
+
+          window.speechSynthesis.speak(utterance);
+        }
+      }, HOVER_DELAY);
+    };
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target) return;
+
+      // Clear timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+
+      // Remove highlight if present
+      const readableSelectors = 'h1, h2, h3, h4, h5, h6, p, li, button, a, span, label, [role="button"]';
+      const readableElement = target.matches(readableSelectors) 
+        ? target 
+        : target.closest(readableSelectors);
+
+      if (readableElement) {
+        readableElement.classList.remove(NARRATOR_HIGHLIGHT_CLASS);
+      }
+
+      hoveredElementRef.current = null;
+    };
+
+    // Add event listeners
+    document.addEventListener('mouseenter', handleMouseEnter, true);
+    document.addEventListener('mouseleave', handleMouseLeave, true);
+
+    return () => {
+      document.removeEventListener('mouseenter', handleMouseEnter, true);
+      document.removeEventListener('mouseleave', handleMouseLeave, true);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, [narratorEnabled]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -239,6 +333,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         window.speechSynthesis.cancel();
       }
       clearHighlight();
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
     };
   }, [clearHighlight]);
 
