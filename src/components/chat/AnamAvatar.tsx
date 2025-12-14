@@ -244,7 +244,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
   return (
     <div className={cn("relative", className)}>
       {/* Video container - Larger size */}
-      <div className="relative w-full aspect-[4/3] max-w-[480px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border">
+      <div className="relative w-full aspect-[3/4] max-w-[420px] mx-auto rounded-2xl overflow-hidden bg-muted border border-border">
         <AnimatePresence mode="wait">
           {!isConnected && !isConnecting && (
             <motion.div
