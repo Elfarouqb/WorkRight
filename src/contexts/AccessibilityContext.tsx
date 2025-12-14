@@ -238,7 +238,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (!narratorEnabled || !('speechSynthesis' in window)) return;
 
-    const HOVER_DELAY = 1500; // 1.5 seconds
+    const HOVER_DELAY = 400; // 0.4 seconds
 
     const handleMouseEnter = (e: MouseEvent) => {
       const target = e.target as Element;
