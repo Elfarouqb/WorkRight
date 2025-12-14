@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Message = { role: 'user' | 'assistant'; content: string };
+
+export interface ChatAction {
+  action: string;
+  navigate?: string;
+  savedToDb?: boolean;
+  deadlines?: Record<string, string>;
+  message?: string;
+}
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -8,12 +18,16 @@ export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<ChatAction | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const sendMessage = useCallback(async (input: string) => {
     const userMsg: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
     setError(null);
+    setLastAction(null);
 
     let assistantContent = '';
 
@@ -35,7 +49,10 @@ export const useChat = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
+        body: JSON.stringify({ 
+          messages: [...messages, userMsg],
+          userId: user?.id || null
+        }),
       });
 
       if (!resp.ok) {
@@ -71,6 +88,21 @@ export const useChat = () => {
 
           try {
             const parsed = JSON.parse(jsonStr);
+            
+            // Check for action events (navigation, etc.)
+            if (parsed.action) {
+              console.log('Chat action received:', parsed);
+              setLastAction(parsed as ChatAction);
+              
+              // Handle navigation
+              if (parsed.navigate) {
+                setTimeout(() => {
+                  navigate(parsed.navigate);
+                }, 500);
+              }
+              continue;
+            }
+            
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) updateAssistant(content);
           } catch {
@@ -92,6 +124,15 @@ export const useChat = () => {
           if (jsonStr === '[DONE]') continue;
           try {
             const parsed = JSON.parse(jsonStr);
+            
+            if (parsed.action) {
+              setLastAction(parsed as ChatAction);
+              if (parsed.navigate) {
+                setTimeout(() => navigate(parsed.navigate), 500);
+              }
+              continue;
+            }
+            
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) updateAssistant(content);
           } catch { /* ignore */ }
@@ -105,12 +146,13 @@ export const useChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, user, navigate]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
+    setLastAction(null);
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearMessages };
+  return { messages, isLoading, error, sendMessage, clearMessages, lastAction };
 };
