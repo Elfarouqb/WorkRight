@@ -375,11 +375,63 @@ const Hulp = () => {
           </div>
         </div>
 
-        {/* Privacy Note */}
-        <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
-          Je privacy is belangrijk. Alles wat je deelt blijft vertrouwelijk en wordt alleen gebruikt om je te helpen. 
-          We geven geen juridisch advies - we helpen je voorbereiden op gesprekken met professionals.
-        </p>
+        {/* Disclaimer and Human Signposting */}
+        <div className="mt-8 max-w-3xl mx-auto space-y-4">
+          {/* Legal Disclaimer */}
+          <div className="bg-muted/50 border border-border rounded-xl p-4">
+            <p className="text-sm text-foreground font-medium mb-2">
+              ⚠️ Dit is informatie, geen juridisch advies
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Alles wat we bespreken is bedoeld om je te helpen begrijpen. Het is geen vervanging voor professioneel advies. 
+              Laat belangrijke beslissingen altijd controleren door een adviseur.
+            </p>
+          </div>
+
+          {/* Human Signposting */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+            <p className="text-sm text-foreground font-medium mb-3">
+              📞 Praat met een echte adviseur
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <a 
+                href="tel:0900-8020" 
+                className="flex items-center gap-2 text-primary hover:underline"
+              >
+                <span className="font-semibold">Het Juridisch Loket:</span> 0900-8020 (gratis)
+              </a>
+              <a 
+                href="https://www.mensenrechten.nl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-primary hover:underline"
+              >
+                <span className="font-semibold">Mensenrechten:</span> mensenrechten.nl
+              </a>
+              <a 
+                href="https://www.fnv.nl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-primary hover:underline"
+              >
+                <span className="font-semibold">Vakbond FNV:</span> fnv.nl
+              </a>
+              <a 
+                href="https://www.uwv.nl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-primary hover:underline"
+              >
+                <span className="font-semibold">UWV:</span> uwv.nl
+              </a>
+            </div>
+          </div>
+
+          {/* Privacy Note */}
+          <p className="text-center text-xs text-muted-foreground">
+            Je privacy is belangrijk. Alles wat je deelt blijft vertrouwelijk en wordt alleen gebruikt om je te helpen.
+          </p>
+        </div>
       </main>
 
       <Footer />
