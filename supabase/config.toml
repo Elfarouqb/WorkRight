@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.anam-session]
 verify_jwt = false
+
+[functions.send-transcript]
+verify_jwt = false
