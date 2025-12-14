@@ -339,6 +339,25 @@ interface Translations {
   hulpQ2: string;
   hulpQ3: string;
   hulpQ4: string;
+
+  // Accessibility
+  accessibilityTitle: string;
+  narratorMode: string;
+  narratorModeDesc: string;
+  narratorEnabled: string;
+  narratorDisabled: string;
+  narratorPlay: string;
+  narratorStop: string;
+  readingFont: string;
+  readingFontDesc: string;
+  fontStandard: string;
+  fontDyslexia: string;
+  textSize: string;
+  textSizeDesc: string;
+  textSizeStandard: string;
+  textSizeLarge: string;
+  textSizeLarger: string;
+  preferencesSaved: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -678,6 +697,25 @@ const translations: Record<Language, Translations> = {
     hulpQ2: 'Wat telt als discriminatie?',
     hulpQ3: 'Hoeveel tijd heb ik?',
     hulpQ4: 'Wat doet Het Juridisch Loket?',
+
+    // Accessibility
+    accessibilityTitle: 'Toegankelijkheid',
+    narratorMode: 'Voorleesfunctie',
+    narratorModeDesc: 'Laat de inhoud van de pagina voorlezen',
+    narratorEnabled: 'Aan',
+    narratorDisabled: 'Uit',
+    narratorPlay: 'Afspelen',
+    narratorStop: 'Stop',
+    readingFont: 'Leeslettertype',
+    readingFontDesc: 'Kies een lettertype dat makkelijker te lezen is',
+    fontStandard: 'Standaard',
+    fontDyslexia: 'Dyslexie',
+    textSize: 'Tekstgrootte',
+    textSizeDesc: 'Maak alles groter en makkelijker te zien',
+    textSizeStandard: 'Standaard',
+    textSizeLarge: 'Groot',
+    textSizeLarger: 'Groter',
+    preferencesSaved: 'Je voorkeuren worden automatisch opgeslagen.',
   },
   en: {
     // Header
@@ -1015,6 +1053,25 @@ const translations: Record<Language, Translations> = {
     hulpQ2: 'What counts as discrimination?',
     hulpQ3: 'How much time do I have?',
     hulpQ4: 'What does the Juridisch Loket do?',
+
+    // Accessibility
+    accessibilityTitle: 'Accessibility',
+    narratorMode: 'Narrator Mode',
+    narratorModeDesc: 'Let the page content be read aloud to you',
+    narratorEnabled: 'Enabled',
+    narratorDisabled: 'Disabled',
+    narratorPlay: 'Play',
+    narratorStop: 'Stop',
+    readingFont: 'Reading Font',
+    readingFontDesc: 'Choose a font that is easier for you to read',
+    fontStandard: 'Standard',
+    fontDyslexia: 'Dyslexia',
+    textSize: 'Text Size',
+    textSizeDesc: 'Make everything larger and easier to see',
+    textSizeStandard: 'Standard',
+    textSizeLarge: 'Large',
+    textSizeLarger: 'Larger',
+    preferencesSaved: 'Your preferences are saved automatically.',
   },
 };
 

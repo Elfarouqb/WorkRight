@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext, useCallback, useRef } f
 
 type FontMode = "default" | "dyslexic";
 type TextSize = "default" | "large" | "larger";
+type NarratorLanguage = "nl" | "en";
 
 interface AccessibilityContextType {
   fontMode: FontMode;
@@ -14,6 +15,8 @@ interface AccessibilityContextType {
   startNarrating: () => void;
   stopNarrating: () => void;
   speakText: (text: string) => void;
+  narratorLanguage: NarratorLanguage;
+  setNarratorLanguage: (lang: NarratorLanguage) => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -25,6 +28,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const [fontMode, setFontModeState] = useState<FontMode>("default");
   const [textSize, setTextSizeState] = useState<TextSize>("default");
   const [narratorEnabled, setNarratorEnabledState] = useState(false);
+  const [narratorLanguage, setNarratorLanguageState] = useState<NarratorLanguage>("nl");
   const [isNarrating, setIsNarrating] = useState(false);
   const currentElementRef = useRef<Element | null>(null);
   const elementsQueueRef = useRef<Element[]>([]);
@@ -37,11 +41,36 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     const savedFontMode = localStorage.getItem("wr-font-mode") as FontMode | null;
     const savedTextSize = localStorage.getItem("wr-text-size") as TextSize | null;
     const savedNarrator = localStorage.getItem("wr-narrator") === "true";
+    const savedLanguage = localStorage.getItem("language") as NarratorLanguage | null;
     
     if (savedFontMode) setFontModeState(savedFontMode);
     if (savedTextSize) setTextSizeState(savedTextSize);
     setNarratorEnabledState(savedNarrator);
+    if (savedLanguage) setNarratorLanguageState(savedLanguage);
   }, []);
+
+  // Sync narrator language with main language setting
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const lang = localStorage.getItem("language") as NarratorLanguage | null;
+      if (lang) setNarratorLanguageState(lang);
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also check periodically for changes within the same tab
+    const interval = setInterval(() => {
+      const lang = localStorage.getItem("language") as NarratorLanguage | null;
+      if (lang && lang !== narratorLanguage) {
+        setNarratorLanguageState(lang);
+      }
+    }, 1000);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [narratorLanguage]);
 
   // Inject highlight styles
   useEffect(() => {
@@ -91,6 +120,10 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     localStorage.setItem("wr-text-size", size);
   };
 
+  const setNarratorLanguage = (lang: NarratorLanguage) => {
+    setNarratorLanguageState(lang);
+  };
+
   const clearHighlight = useCallback(() => {
     if (currentElementRef.current) {
       currentElementRef.current.classList.remove(NARRATOR_HIGHLIGHT_CLASS);
@@ -107,6 +140,27 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     element.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [clearHighlight]);
 
+  // Get the best voice for the current language
+  const getVoiceForLanguage = useCallback((voices: SpeechSynthesisVoice[]) => {
+    const langCode = narratorLanguage === "nl" ? "nl" : "en";
+    
+    // Try to find a female voice first for a friendlier tone
+    const femaleVoice = voices.find(v => 
+      v.lang.startsWith(langCode) && 
+      (v.name.toLowerCase().includes("female") || 
+       v.name.toLowerCase().includes("vrouw") ||
+       v.name.toLowerCase().includes("anna") ||
+       v.name.toLowerCase().includes("ellen") ||
+       v.name.toLowerCase().includes("sara") ||
+       v.name.toLowerCase().includes("claire"))
+    );
+    
+    if (femaleVoice) return femaleVoice;
+    
+    // Fall back to any voice for the language
+    return voices.find(v => v.lang.startsWith(langCode));
+  }, [narratorLanguage]);
+
   const speakText = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) {
       console.warn('Speech synthesis not supported');
@@ -117,15 +171,15 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'nl-NL';
+    utterance.lang = narratorLanguage === "nl" ? "nl-NL" : "en-US";
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.pitch = 1.05; // Slightly higher for a friendlier female tone
     
-    // Try to find a Dutch voice
+    // Try to find the best voice
     const voices = window.speechSynthesis.getVoices();
-    const dutchVoice = voices.find(v => v.lang.startsWith('nl'));
-    if (dutchVoice) {
-      utterance.voice = dutchVoice;
+    const voice = getVoiceForLanguage(voices);
+    if (voice) {
+      utterance.voice = voice;
     }
 
     utterance.onstart = () => setIsNarrating(true);
@@ -133,7 +187,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     utterance.onerror = () => setIsNarrating(false);
 
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [narratorLanguage, getVoiceForLanguage]);
 
   const narrateNextElement = useCallback(() => {
     const elements = elementsQueueRef.current;
@@ -159,14 +213,14 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     highlightElement(element);
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'nl-NL';
+    utterance.lang = narratorLanguage === "nl" ? "nl-NL" : "en-US";
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.pitch = 1.05;
 
     const voices = window.speechSynthesis.getVoices();
-    const dutchVoice = voices.find(v => v.lang.startsWith('nl'));
-    if (dutchVoice) {
-      utterance.voice = dutchVoice;
+    const voice = getVoiceForLanguage(voices);
+    if (voice) {
+      utterance.voice = voice;
     }
 
     utterance.onend = () => {
@@ -180,7 +234,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     };
 
     window.speechSynthesis.speak(utterance);
-  }, [clearHighlight, highlightElement]);
+  }, [clearHighlight, highlightElement, narratorLanguage, getVoiceForLanguage]);
 
   const startNarrating = useCallback(() => {
     if (!narratorEnabled || !('speechSynthesis' in window)) return;
@@ -262,7 +316,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
       hoveredElementRef.current = readableElement;
 
-      // Set timeout to speak after 1.5 seconds
+      // Set timeout to speak after delay
       hoverTimeoutRef.current = setTimeout(() => {
         if (hoveredElementRef.current === readableElement) {
           // Add highlight
@@ -271,14 +325,14 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           // Speak the text
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'nl-NL';
+          utterance.lang = narratorLanguage === "nl" ? "nl-NL" : "en-US";
           utterance.rate = 0.9;
-          utterance.pitch = 1;
+          utterance.pitch = 1.05;
 
           const voices = window.speechSynthesis.getVoices();
-          const dutchVoice = voices.find(v => v.lang.startsWith('nl'));
-          if (dutchVoice) {
-            utterance.voice = dutchVoice;
+          const voice = getVoiceForLanguage(voices);
+          if (voice) {
+            utterance.voice = voice;
           }
 
           utterance.onend = () => {
@@ -324,7 +378,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         clearTimeout(hoverTimeoutRef.current);
       }
     };
-  }, [narratorEnabled]);
+  }, [narratorEnabled, narratorLanguage, getVoiceForLanguage]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -350,7 +404,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       isNarrating,
       startNarrating,
       stopNarrating,
-      speakText
+      speakText,
+      narratorLanguage,
+      setNarratorLanguage,
     }}>
       {children}
     </AccessibilityContext.Provider>

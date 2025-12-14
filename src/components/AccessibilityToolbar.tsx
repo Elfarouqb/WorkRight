@@ -5,9 +5,11 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Accessibility, Type, ZoomIn, Check, Volume2, VolumeX, Play, Square } from "lucide-react";
 
 export function AccessibilityToolbar() {
+  const { t } = useLanguage();
   const { 
     fontMode, 
     setFontMode, 
@@ -27,10 +29,10 @@ export function AccessibilityToolbar() {
           variant="ghost" 
           size="sm"
           className="gap-2"
-          aria-label="Accessibility options"
+          aria-label={t.accessibilityTitle}
         >
           <Accessibility className="h-4 w-4" />
-          <span className="hidden sm:inline">Accessibility</span>
+          <span className="hidden sm:inline">{t.accessibilityTitle}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72" align="end">
@@ -39,10 +41,10 @@ export function AccessibilityToolbar() {
           <div className="space-y-2">
             <h4 className="font-heading font-bold text-sm flex items-center gap-2">
               <Volume2 className="h-4 w-4 text-primary" />
-              Narrator Mode
+              {t.narratorMode}
             </h4>
             <p className="text-xs text-muted-foreground mb-3">
-              Let the page content be read aloud to you
+              {t.narratorModeDesc}
             </p>
             <div className="flex gap-2">
               <button
@@ -56,12 +58,12 @@ export function AccessibilityToolbar() {
                 {narratorEnabled ? (
                   <>
                     <Volume2 className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Enabled</span>
+                    <span className="text-sm font-medium">{t.narratorEnabled}</span>
                   </>
                 ) : (
                   <>
                     <VolumeX className="h-4 w-4" />
-                    <span className="text-sm font-medium">Disabled</span>
+                    <span className="text-sm font-medium">{t.narratorDisabled}</span>
                   </>
                 )}
               </button>
@@ -77,12 +79,12 @@ export function AccessibilityToolbar() {
                   {isNarrating ? (
                     <>
                       <Square className="h-4 w-4" />
-                      <span className="text-sm font-medium">Stop</span>
+                      <span className="text-sm font-medium">{t.narratorStop}</span>
                     </>
                   ) : (
                     <>
                       <Play className="h-4 w-4" />
-                      <span className="text-sm font-medium">Play</span>
+                      <span className="text-sm font-medium">{t.narratorPlay}</span>
                     </>
                   )}
                 </button>
@@ -93,10 +95,10 @@ export function AccessibilityToolbar() {
           <div className="border-t border-border pt-4 space-y-2">
             <h4 className="font-heading font-bold text-sm flex items-center gap-2">
               <Type className="h-4 w-4 text-primary" />
-              Reading Font
+              {t.readingFont}
             </h4>
             <p className="text-xs text-muted-foreground mb-3">
-              Choose a font that is easier for you to read
+              {t.readingFontDesc}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -108,7 +110,7 @@ export function AccessibilityToolbar() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm">Standard</span>
+                  <span className="font-semibold text-sm">{t.fontStandard}</span>
                   {fontMode === "default" && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
@@ -126,7 +128,7 @@ export function AccessibilityToolbar() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm">Dyslexia</span>
+                  <span className="font-semibold text-sm">{t.fontDyslexia}</span>
                   {fontMode === "dyslexic" && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
@@ -141,10 +143,10 @@ export function AccessibilityToolbar() {
           <div className="border-t border-border pt-4 space-y-2">
             <h4 className="font-heading font-bold text-sm flex items-center gap-2">
               <ZoomIn className="h-4 w-4 text-primary" />
-              Text Size
+              {t.textSize}
             </h4>
             <p className="text-xs text-muted-foreground mb-3">
-              Make everything larger and easier to see
+              {t.textSizeDesc}
             </p>
             <div className="flex gap-2">
               <button
@@ -179,15 +181,15 @@ export function AccessibilityToolbar() {
               </button>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground pt-1">
-              <span>Standard</span>
-              <span>Large</span>
-              <span>Larger</span>
+              <span>{t.textSizeStandard}</span>
+              <span>{t.textSizeLarge}</span>
+              <span>{t.textSizeLarger}</span>
             </div>
           </div>
 
           <div className="border-t border-border pt-4">
             <p className="text-xs text-muted-foreground">
-              Your preferences are saved automatically.
+              {t.preferencesSaved}
             </p>
           </div>
         </div>
