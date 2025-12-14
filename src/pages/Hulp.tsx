@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Send, Trash2, MessageSquare } from 'lucide-react';
+import { Loader2, Send, Trash2, MessageSquare, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useChat } from '@/hooks/useChat';
+import { useSendTranscript } from '@/hooks/useSendTranscript';
+import { useAuth } from '@/contexts/AuthContext';
 import { AiAvatar } from '@/components/chat/AiAvatar';
 import { AnamAvatar } from '@/components/chat/AnamAvatar';
 import { cn } from '@/lib/utils';
@@ -20,8 +22,16 @@ const Hulp = () => {
   // Text chat state
   const [input, setInput] = useState('');
   const { messages: chatMessages, isLoading, error: chatError, sendMessage, clearMessages: clearChatMessages } = useChat();
+  const { sendTranscript, isLoading: isSendingTranscript } = useSendTranscript();
+  const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Transcript state
+  const [hasSentTranscript, setHasSentTranscript] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const messagesCountRef = useRef(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,6 +58,91 @@ const Hulp = () => {
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  // Convert messages to transcript text
+  const getTranscriptText = useCallback(() => {
+    return chatMessages.map(msg => {
+      const role = msg.role === 'user' ? 'Gebruiker' : 'Assistent';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
+  }, [chatMessages]);
+
+  // Send transcript with email
+  const doSendTranscript = useCallback(async (email: string) => {
+    if (chatMessages.length === 0 || hasSentTranscript) return;
+
+    const transcript = getTranscriptText();
+    const userName = user?.user_metadata?.display_name || email.split('@')[0] || '';
+
+    console.log('Sending transcript to:', email || '(no email)');
+
+    await sendTranscript({
+      transcript,
+      email,
+      name: userName,
+    });
+
+    setHasSentTranscript(true);
+  }, [chatMessages, hasSentTranscript, getTranscriptText, sendTranscript, user]);
+
+  // Track message count to detect new conversations
+  useEffect(() => {
+    if (chatMessages.length > 0 && messagesCountRef.current === 0) {
+      setHasSentTranscript(false);
+      setShowEmailPrompt(false);
+      setGuestEmail('');
+    }
+    messagesCountRef.current = chatMessages.length;
+  }, [chatMessages.length]);
+
+  // Handle page unload - send transcript
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (chatMessages.length > 0 && !hasSentTranscript && user?.email) {
+        // Try to send for logged in users
+        const transcript = getTranscriptText();
+        navigator.sendBeacon?.(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-transcript`,
+          JSON.stringify({
+            transcript,
+            email: user.email,
+            name: user.user_metadata?.display_name || '',
+          })
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [chatMessages, hasSentTranscript, user, getTranscriptText]);
+
+  // Handle guest email submit
+  const handleGuestEmailSubmit = async () => {
+    if (guestEmail.trim()) {
+      await doSendTranscript(guestEmail.trim());
+    }
+    setShowEmailPrompt(false);
+  };
+
+  // Handle skip (no email)
+  const handleSkipEmail = () => {
+    setShowEmailPrompt(false);
+  };
+
+  // Trigger email prompt for guests when they have messages
+  const handleClearWithTranscript = () => {
+    if (chatMessages.length > 0 && !hasSentTranscript) {
+      if (user?.email) {
+        doSendTranscript(user.email);
+      } else {
+        setShowEmailPrompt(true);
+        return; // Don't clear yet
+      }
+    }
+    clearChatMessages();
+    setHasSentTranscript(false);
+    setGuestEmail('');
   };
 
   return (
@@ -110,7 +205,7 @@ const Hulp = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={clearChatMessages}
+                  onClick={handleClearWithTranscript}
                   disabled={chatMessages.length === 0}
                   className="h-8 w-8"
                   aria-label="Wis gesprek"
@@ -278,6 +373,82 @@ const Hulp = () => {
       </main>
 
       <Footer />
+
+      {/* Email prompt for guests */}
+      <AnimatePresence>
+        {showEmailPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+            onClick={handleSkipEmail}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Samenvatting ontvangen?</h3>
+                  <p className="text-xs text-muted-foreground">Per e-mail, helemaal gratis</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Wil je een overzichtelijke samenvatting van dit gesprek ontvangen? Vul je e-mailadres in en we sturen het naar je toe.
+              </p>
+
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="je@email.nl"
+                  className={cn(
+                    "w-full rounded-xl px-4 py-3 text-sm",
+                    "bg-muted text-foreground placeholder:text-muted-foreground",
+                    "border border-border focus:ring-2 focus:ring-ring focus:outline-none"
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && guestEmail.trim()) {
+                      handleGuestEmailSubmit();
+                    }
+                  }}
+                  autoFocus
+                />
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleSkipEmail}
+                  >
+                    Nee, bedankt
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleGuestEmailSubmit}
+                    disabled={!guestEmail.trim() || isSendingTranscript}
+                  >
+                    {isSendingTranscript ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Verstuur'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
