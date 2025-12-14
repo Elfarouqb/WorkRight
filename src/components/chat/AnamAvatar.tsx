@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Video, VideoOff, Mic, MicOff, Mail } from 'lucide-react';
+import { Loader2, Video, Square, Mic, MicOff, Mail, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -309,7 +309,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3"
           >
             <Button
               size="icon"
@@ -320,14 +320,13 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
             >
               {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
+            {/* Big red square STOP button */}
             <Button
-              size="icon"
-              variant="destructive"
               onClick={endSession}
-              className="rounded-full h-12 w-12"
-              title="Gesprek beëindigen"
+              className="h-14 w-14 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-lg"
+              title="Gesprek stoppen"
             >
-              <VideoOff className="h-5 w-5" />
+              <Square className="h-6 w-6 fill-current" />
             </Button>
           </motion.div>
         )}
@@ -341,7 +340,7 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
         </div>
       )}
 
-      {/* Email prompt for guests after video session ends */}
+      {/* Email prompt for guests OR confirmation for logged-in users after session ends */}
       <AnimatePresence>
         {showEmailPrompt && (
           <motion.div
@@ -412,6 +411,8 @@ export const AnamAvatar = ({ onMessage, className }: AnamAvatarProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Success toast shown for logged-in users - handled via toast already */}
     </div>
   );
 };
