@@ -1,13 +1,12 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
 import { 
   Phone, 
   Building, 
   Scale, 
-  FileText, 
   Users, 
   Shield, 
   ExternalLink,
@@ -17,131 +16,96 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-
-const resources = [
-  {
-    name: "Het Juridisch Loket",
-    description: "Gratis juridisch advies voor iedereen",
-    phone: "0900-8020",
-    url: "https://www.juridischloket.nl",
-    icon: Phone,
-  },
-  {
-    name: "College voor de Rechten van de Mens",
-    description: "Beoordeelt discriminatieklachten (gratis)",
-    url: "https://mensenrechten.nl",
-    icon: Scale,
-  },
-  {
-    name: "UWV",
-    description: "Uitkeringen en ontslagprocedures",
-    url: "https://www.uwv.nl",
-    icon: Building,
-  },
-  {
-    name: "FNV",
-    description: "Vakbond met juridische ondersteuning",
-    url: "https://www.fnv.nl",
-    icon: Users,
-  },
-  {
-    name: "Antidiscriminatiebureau",
-    description: "Lokale hulp bij discriminatie",
-    url: "https://discriminatie.nl",
-    icon: Shield,
-  },
-];
-
-const processSteps = [
-  {
-    step: 1,
-    title: "Verzamel informatie",
-    description: "Documenteer wat er is gebeurd, bewaar e-mails en berichten.",
-    details: [
-      "Schrijf zo snel mogelijk op wat er is gebeurd",
-      "Bewaar alle e-mails, WhatsApp-berichten en brieven",
-      "Noteer namen van getuigen",
-      "Gebruik onze Tijdlijnbouwer om alles overzichtelijk te maken",
-    ],
-  },
-  {
-    step: 2,
-    title: "Vraag advies",
-    description: "Neem contact op met Het Juridisch Loket voor gratis advies.",
-    details: [
-      "Bel 0900-8020 voor gratis advies",
-      "Je kunt ook langsgaan bij een spreekuur",
-      "Leg je situatie uit en vraag wat je opties zijn",
-      "Vraag naar termijnen die voor jou gelden",
-    ],
-  },
-  {
-    step: 3,
-    title: "Kies je route",
-    description: "Afhankelijk van je situatie zijn er verschillende mogelijkheden.",
-    details: [
-      "Bezwaar maken bij UWV (bij ontslagvergunning)",
-      "Naar de kantonrechter (bij ontslag op staande voet)",
-      "College voor de Rechten van de Mens (bij discriminatie)",
-      "Onderhandelen met je werkgever",
-    ],
-  },
-  {
-    step: 4,
-    title: "Onderneem actie",
-    description: "Zet de gekozen stappen, binnen de geldende termijnen.",
-    details: [
-      "Vraag zo nodig WW aan",
-      "Dien eventueel een klacht in",
-      "Verzamel extra bewijs indien nodig",
-      "Houd alle correspondentie bij",
-    ],
-  },
-];
-
-const faqItems = [
-  {
-    question: "Wat is het College voor de Rechten van de Mens?",
-    answer: "Het College voor de Rechten van de Mens is een onafhankelijke instantie die oordeelt over discriminatieklachten. Het is gratis om een klacht in te dienen. Het College geeft een oordeel over of er sprake was van discriminatie. Dit oordeel is niet juridisch bindend, maar wordt vaak wel gevolgd door rechters en werkgevers.",
-  },
-  {
-    question: "Wat doet het UWV?",
-    answer: "Het UWV (Uitvoeringsinstituut Werknemersverzekeringen) beoordeelt ontslagaanvragen van werkgevers en regelt uitkeringen zoals de WW. Als je werkgever je wil ontslaan om bedrijfseconomische redenen of langdurige ziekte, moet die een vergunning aanvragen bij het UWV. Je kunt bezwaar maken tegen beslissingen van het UWV.",
-  },
-  {
-    question: "Wat is een vaststellingsovereenkomst?",
-    answer: "Een vaststellingsovereenkomst is een overeenkomst tussen jou en je werkgever over het beëindigen van je arbeidscontract. Hierin worden afspraken gemaakt over zaken als een ontslagvergoeding, opzegtermijn en getuigschrift. Let op: teken nooit zomaar! Je hebt 14 dagen bedenktijd nadat je hebt getekend.",
-  },
-  {
-    question: "Hoe lang duurt een procedure bij de kantonrechter?",
-    answer: "Een procedure bij de kantonrechter duurt gemiddeld 4 tot 8 weken. Je moet binnen 2 maanden na je ontslag een verzoekschrift indienen. De rechter plant dan een zitting, en meestal volgt binnen enkele weken een uitspraak. Bij complexe zaken kan het langer duren.",
-  },
-  {
-    question: "Wat zijn beschermde gronden?",
-    answer: "Beschermde gronden zijn kenmerken waarop je niet gediscrimineerd mag worden. In Nederland zijn dit: godsdienst, levensovertuiging, politieke gezindheid, ras, geslacht, nationaliteit, seksuele gerichtheid, burgerlijke staat, handicap of chronische ziekte, en leeftijd.",
-  },
-  {
-    question: "Heb ik recht op een WW-uitkering?",
-    answer: "Je hebt recht op WW als je: minimaal 26 weken hebt gewerkt in de 36 weken voor je werkloosheid, niet zelf ontslag hebt genomen, en beschikbaar bent voor werk. Bij ontslag op staande voet kun je mogelijk geen WW krijgen als het ontslag je eigen schuld was. Het UWV beoordeelt dit per geval.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Procesgids = () => {
+  const { t } = useLanguage();
+
+  const resources = [
+    {
+      name: t.resourceJuridischLoket,
+      description: t.resourceJuridischLoketDesc,
+      phone: "0900-8020",
+      url: "https://www.juridischloket.nl",
+      icon: Phone,
+    },
+    {
+      name: t.resourceCollege,
+      description: t.resourceCollegeDesc,
+      url: "https://mensenrechten.nl",
+      icon: Scale,
+    },
+    {
+      name: t.resourceUwv,
+      description: t.resourceUwvDesc,
+      url: "https://www.uwv.nl",
+      icon: Building,
+    },
+    {
+      name: t.resourceFnv,
+      description: t.resourceFnvDesc,
+      url: "https://www.fnv.nl",
+      icon: Users,
+    },
+    {
+      name: t.resourceAntidiscriminatie,
+      description: t.resourceAntidiscriminatieDesc,
+      url: "https://discriminatie.nl",
+      icon: Shield,
+    },
+  ];
+
+  const processSteps = [
+    {
+      step: 1,
+      title: t.processStep1Title,
+      description: t.processStep1Desc,
+      details: [t.processStep1Detail1, t.processStep1Detail2, t.processStep1Detail3, t.processStep1Detail4],
+    },
+    {
+      step: 2,
+      title: t.processStep2Title,
+      description: t.processStep2Desc,
+      details: [t.processStep2Detail1, t.processStep2Detail2, t.processStep2Detail3, t.processStep2Detail4],
+    },
+    {
+      step: 3,
+      title: t.processStep3Title,
+      description: t.processStep3Desc,
+      details: [t.processStep3Detail1, t.processStep3Detail2, t.processStep3Detail3, t.processStep3Detail4],
+    },
+    {
+      step: 4,
+      title: t.processStep4Title,
+      description: t.processStep4Desc,
+      details: [t.processStep4Detail1, t.processStep4Detail2, t.processStep4Detail3, t.processStep4Detail4],
+    },
+  ];
+
+  const faqItems = [
+    { question: t.faq1Question, answer: t.faq1Answer },
+    { question: t.faq2Question, answer: t.faq2Answer },
+    { question: t.faq3Question, answer: t.faq3Answer },
+    { question: t.faq4Question, answer: t.faq4Answer },
+    { question: t.faq5Question, answer: t.faq5Answer },
+    { question: t.faq6Question, answer: t.faq6Answer },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 py-12 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-heading font-bold mb-3">Procesgids</h1>
+            <h1 className="text-3xl font-heading font-bold mb-3">{t.procesgidsTitle}</h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Begrijp hoe het Nederlandse arbeidsrechtsysteem werkt en welke stappen je kunt zetten.
+              {t.procesgidsSubtitle}
             </p>
           </div>
 
           {/* Process Steps */}
           <section className="mb-12">
-            <h2 className="text-2xl font-heading font-bold mb-6">Het proces stap voor stap</h2>
+            <h2 className="text-2xl font-heading font-bold mb-6">{t.procesgidsProcessTitle}</h2>
             <div className="space-y-4">
               {processSteps.map((step, index) => (
                 <motion.div
@@ -180,7 +144,7 @@ const Procesgids = () => {
 
           {/* Resources */}
           <section className="mb-12">
-            <h2 className="text-2xl font-heading font-bold mb-6">Hulpbronnen</h2>
+            <h2 className="text-2xl font-heading font-bold mb-6">{t.procesgidsResourcesTitle}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {resources.map((resource) => {
                 const Icon = resource.icon;
@@ -219,7 +183,7 @@ const Procesgids = () => {
 
           {/* FAQ */}
           <section className="mb-12">
-            <h2 className="text-2xl font-heading font-bold mb-6">Veelgestelde vragen</h2>
+            <h2 className="text-2xl font-heading font-bold mb-6">{t.procesgidsFaqTitle}</h2>
             <Card className="shadow-soft">
               <CardContent className="p-0">
                 <Accordion type="single" collapsible className="w-full">
@@ -241,20 +205,20 @@ const Procesgids = () => {
           {/* CTA */}
           <Card className="bg-gradient-calm text-primary-foreground">
             <CardContent className="p-8 text-center">
-              <h2 className="text-2xl font-heading font-bold mb-3">Klaar om te beginnen?</h2>
+              <h2 className="text-2xl font-heading font-bold mb-3">{t.procesgidsCtaTitle}</h2>
               <p className="mb-6 opacity-90">
-                Gebruik onze tools om je situatie in kaart te brengen en je voor te bereiden.
+                {t.procesgidsCtaDesc}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link to="/rechtenverkenner">
                   <Button variant="secondary" className="w-full sm:w-auto gap-2">
-                    Rechtenverkenner
+                    {t.navRechtenverkenner}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link to="/tijdlijn">
                   <Button variant="secondary" className="w-full sm:w-auto gap-2">
-                    Tijdlijnbouwer
+                    {t.timelineBuilderTitle}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
